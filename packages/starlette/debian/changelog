@@ -1,0 +1,13 @@
+starlette (1.0.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of starlette 1.0.0 for the Avalan PPA.
+  * Transitive runtime dep of python3-fastapi (which Avalan ships
+    in its `server` extras); FastAPI requires `>= 0.46.0` and
+    Noble's archive ships 0.36.x.
+  * Ship a quilt patch (pyproject-license-for-noble) that rewrites
+    the PEP 639 `license = "BSD-3-Clause"` + `license-files = [...]`
+    pair back to the legacy `license = { file = "LICENSE.md" }`
+    table form -- Noble's setuptools / hatchling reject the modern
+    form as ambiguous.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 00:30:00 -0300

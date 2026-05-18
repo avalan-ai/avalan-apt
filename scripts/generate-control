@@ -1,0 +1,13 @@
+#!/bin/sh
+# scripts/generate-control — emit Avalan's debian/control Depends
+# block from debian/dependency-map.toml, optionally rewriting the
+# control file in place between the sentinel comments.
+#
+# Thin POSIX shim around scripts/generate_control.py so the logic
+# stays importable for the test suite (same split as the rest of
+# scripts/).
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/generate_control.py" "$@"

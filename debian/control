@@ -1,0 +1,68 @@
+Source: avalan
+Section: utils
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-build,
+ python3-installer,
+ python3-poetry-core,
+ python3-poetry-dynamic-versioning,
+ python3-pytest <!nocheck>,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/avalan-ai/avalan
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: avalan
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3 (>= 3.11),
+ python3 (<< 3.14),
+# BEGIN generated-depends
+ python3-a2a-sdk (>= 0.3.6),
+ python3-aioboto3 (>= 15.0.0),
+ python3-aiomysql (>= 0.2.0),
+ python3-anthropic (>= 0.71.0),
+ python3-asyncpg (>= 0.30.0),
+ python3-diffusers (>= 0.37.1),
+ python3-fastapi (>= 0.136.1),
+ python3-google-genai (>= 1.28.0),
+ python3-humanize (>= 4.12.3),
+ python3-jinja2 (>= 3.1.6),
+ python3-litellm (>= 1.75.0),
+ python3-matplotlib (>= 3.8.0),
+ python3-mcp (>= 1.12.3),
+ python3-openai (>= 2.0.0),
+ python3-packaging (>= 25.0),
+ python3-pandas (>= 2.3.1),
+ python3-pil (>= 11.3.0),
+ python3-playwright (>= 1.54.0),
+ python3-pydantic (>= 2.11.7),
+ python3-restrictedpython (>= 8.0),
+ python3-rich (>= 14.1.0),
+ python3-sqlalchemy (>= 2.0.43),
+ python3-sqlglot (>= 27.20.0),
+ python3-sympy (>= 1.14.0),
+ python3-tiktoken (>= 0.13.0),
+ python3-uvicorn (>= 0.35.0),
+ python3-youtube-transcript-api (>= 1.2.2),
+# END generated-depends
+Suggests:
+ chromium | firefox,
+ python3-venv,
+Description: multi-backend, multi-modal framework for AI agent development
+ Avalan is a Python SDK and CLI for building and running AI agents and
+ workflows across local and hosted models. It exposes two console commands,
+ avalan and avl, and ships with the default extras enabled: agent, server,
+ tool and vendors.
+ .
+ Heavyweight optional features (local inference, audio, vision, GPU/CUDA,
+ Apple MLX) are not included in this package; install them with pip into a
+ user-controlled virtualenv on top of the system install.

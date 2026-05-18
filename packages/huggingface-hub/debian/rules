@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=huggingface_hub
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream tests need a live Hub backend plus pytest-asyncio /
+# pytest-httpserver at floors not in Noble. Skip at build time;
+# correctness comes from upstream CI plus Avalan's autopkgtest
+# smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

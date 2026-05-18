@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=diffusers
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests pull torch / accelerate / transformers / jax and
+# expect a working CUDA or MPS device. Skip at build time; the
+# heavyweight ML stack is deliberately not part of the Avalan PPA.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

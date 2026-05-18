@@ -1,0 +1,16 @@
+sqlglot (27.29.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of sqlglot 27.29.0 for the Avalan PPA.
+  * Avalan tracks >= 27.20, < 28; Debian sid is on 30.x (above the
+    ceiling), so the rebuild ships the latest 27.x release.
+  * Pure-Python only; the optional sqlglotrs Rust extension is not
+    built (sqlglot falls back to its in-process tokenizer when the
+    extension is absent).
+  * Ship a quilt patch (pyproject-license-for-noble) that rewrites
+    the SPDX-string `license = "MIT"` + `license-files = [...]`
+    pair back to the legacy `license = { file = "LICENSE" }` table
+    form -- Noble's python3-setuptools predates PEP 639 and rejects
+    the modern form as ambiguous. No runtime impact; the wheel
+    license metadata is identical.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 19:00:00 -0300

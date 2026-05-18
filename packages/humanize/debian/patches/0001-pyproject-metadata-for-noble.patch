@@ -1,0 +1,34 @@
+Description: Soften pyproject metadata for Noble's hatchling
+ Noble's python3-hatchling predates two features humanize 4.12.3
+ leans on: the PEP 639 license-files list form (Noble's validator
+ still wants the older table form, e.g. `license = { file = "..." }`,
+ and rejects `license-files = [...]` as ill-typed), and the Python
+ 3.14 trove classifier (unknown to Noble's classifier table).
+ Translate the metadata back to the form Noble's hatchling accepts
+ without changing runtime behavior. The 3.14 classifier is purely
+ informational and the SPDX-string -> table switch yields the same
+ license metadata in the wheel.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-18
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -12,8 +12,7 @@
+ keywords = [
+   "humanize time size",
+ ]
+-license = "MIT"
+-license-files = [ "LICENCE" ]
++license = { file = "LICENCE" }
+ maintainers = [ { name = "Hugo van Kemenade" } ]
+ authors = [ { name = "Jason Moiron", email = "jmoiron@jmoiron.net" } ]
+ requires-python = ">=3.9"
+@@ -28,7 +27,6 @@
+   "Programming Language :: Python :: 3.11",
+   "Programming Language :: Python :: 3.12",
+   "Programming Language :: Python :: 3.13",
+-  "Programming Language :: Python :: 3.14",
+   "Programming Language :: Python :: Implementation :: CPython",
+   "Programming Language :: Python :: Implementation :: PyPy",
+   "Topic :: Text Processing",

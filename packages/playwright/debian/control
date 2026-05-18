@@ -1,0 +1,34 @@
+Source: playwright
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 62),
+ python3-setuptools-scm,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://playwright.dev/python/
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-playwright
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Recommends:
+ chromium | firefox,
+Description: Python API for the Playwright browser automation library (Avalan PPA pin)
+ Playwright is a Microsoft-maintained library for browser automation
+ that exposes a single async/sync API across Chromium, Firefox, and
+ WebKit. This rebuild ships the pure-Python client at 1.55.0 because
+ Avalan tracks `>= 1.54, < 2.0`; Noble's archive does not carry a
+ matching version. The bundled browser drivers and pre-built browser
+ binaries from upstream's wheels are deliberately not built -- users
+ install chromium (or firefox) via apt separately, and Playwright
+ falls back to those system browsers at runtime.

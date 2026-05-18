@@ -1,0 +1,43 @@
+#!/bin/sh
+# scripts/lint-package — run lintian against the .changes files produced
+# by scripts/build-source (and, in later phases, scripts/build-binary).
+# Exits non-zero on any error or unreviewed warning so this works as
+# both a developer gate and a CI gate.
+
+set -eu
+set -x
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+# Lint every .changes file under build/. At Phase 1 only
+# avalan_*_source.changes exists; the binary avalan_*_amd64.changes
+# (etc.) arrives once scripts/build-binary lands in Phase 4. The glob
+# below picks up whichever are present.
+changes_files=
+for f in build/avalan_*.changes; do
+    [ -e "$f" ] || continue
+    changes_files="${changes_files} $f"
+done
+
+if [ -z "$changes_files" ]; then
+    set +x
+    echo "FATAL: no build/avalan_*.changes file found." >&2
+    echo "       Run scripts/build-source (or build-binary) first." >&2
+    exit 1
+fi
+
+# --pedantic + --info + --display-info surface every pedantic and
+# informational tag. --fail-on=error,warning enforces "any error or
+# unreviewed warning" — overrides under debian/source/ (or per-binary
+# under debian/<pkg>.lintian-overrides) suppress tags we have
+# deliberately reviewed, so a healthy build exits clean.
+for f in $changes_files; do
+    lintian \
+        --pedantic \
+        --info \
+        --display-info \
+        --fail-on error,warning \
+        "$f"
+done

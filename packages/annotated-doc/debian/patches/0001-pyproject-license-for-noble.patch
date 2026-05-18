@@ -1,0 +1,24 @@
+Description: Use the older pyproject license-table form for Noble
+ Noble's python3-setuptools (driving pdm-backend's resolver) rejects
+ the PEP 639 `license = "MIT"` + `license-files = [...]` pair as
+ ambiguous during dh_auto_clean. Rewrite to the legacy
+ `license = { file = "LICENSE" }` table form. Equivalent wheel
+ metadata; no runtime impact.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-19
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,10 +1,7 @@
+ [project]
+ name = "annotated-doc"
+ dynamic = []
+-license = "MIT"
+-license-files = [
+-    "LICENSE",
+-]
++license = { file = "LICENSE" }
+ description = "Document parameters, class attributes, return types, and variables inline, with Annotated."
+ readme = "README.md"
+ authors = [

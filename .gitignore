@@ -1,0 +1,11 @@
+specs/*
+
+# Build artifacts: unpacked upstream sdist, .dsc, .deb, .changes, sbuild logs.
+build/
+
+# Python bytecode and pytest caches.
+__pycache__/
+.pytest_cache/
+
+# Claude Code local state (settings.local.json, scheduled task locks).
+.claude/

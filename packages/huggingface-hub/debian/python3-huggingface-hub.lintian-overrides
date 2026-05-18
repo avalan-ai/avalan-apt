@@ -1,0 +1,7 @@
+# Upstream does not ship man pages for the hf / huggingface-cli /
+# tiny-agents CLIs; each program's `--help` covers its usage.
+# Writing derived man pages would drift from upstream on every
+# version bump.
+python3-huggingface-hub: no-manual-page [usr/bin/hf]
+python3-huggingface-hub: no-manual-page [usr/bin/huggingface-cli]
+python3-huggingface-hub: no-manual-page [usr/bin/tiny-agents]

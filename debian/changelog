@@ -1,0 +1,6 @@
+avalan (1.4.7-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial Debian packaging.
+  * Mirrors Homebrew default profile (agent, server, tool, vendors).
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 15:43:27 -0300

@@ -1,0 +1,14 @@
+#!/bin/sh
+# scripts/prepare-dep-source — fetch and verify one Avalan dependency's
+# upstream source, unpack it under build/deps/, and overlay
+# packages/<source>/debian/ so the result is ready for
+# `dpkg-buildpackage`.
+#
+# Thin POSIX shim around scripts/prepare_dep_source.py — same split
+# as scripts/check-dependencies / scripts/check_dependencies.py so the
+# logic stays importable for the test suite.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/prepare_dep_source.py" "$@"

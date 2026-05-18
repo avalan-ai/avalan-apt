@@ -1,0 +1,27 @@
+Source: youtube-transcript-api
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-poetry-core,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/jdepoix/youtube-transcript-api
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-youtube-transcript-api
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: fetch YouTube transcripts and subtitles (Avalan PPA pin)
+ youtube-transcript-api is a Python library that retrieves
+ transcripts and subtitles from YouTube videos -- both manually
+ supplied and auto-generated -- without driving a headless browser.
+ Not in Debian; hand-packaged at 1.2.4 to satisfy Avalan's
+ >= 1.2.2, < 2.0 constraint.

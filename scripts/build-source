@@ -1,0 +1,29 @@
+#!/bin/sh
+# scripts/build-source — thin wrapper around `dpkg-buildpackage -S -us -uc`
+# against the prepared source tree under build/.
+
+set -eu
+set -x
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+version=$(python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['version'])")
+src_dir="build/avalan-${version}"
+
+if [ ! -d "$src_dir" ]; then
+    set +x
+    echo "FATAL: $src_dir not found. Run scripts/prepare-source first." >&2
+    exit 1
+fi
+
+# dpkg-buildpackage writes artifacts (.dsc, .debian.tar.xz, _source.changes)
+# to the parent of the source tree, i.e. into build/ alongside the source.
+(cd "$src_dir" && dpkg-buildpackage -S -us -uc)
+
+# Each build script shells out to lint-package on success. The lint
+# script lands in slice 1.3; until then this is a no-op.
+if [ -x scripts/lint-package ]; then
+    scripts/lint-package
+fi

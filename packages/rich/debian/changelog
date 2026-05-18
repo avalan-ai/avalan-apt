@@ -1,0 +1,7 @@
+rich (14.3.4-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of rich 14.3.4 for the Avalan PPA.
+  * Avalan tracks >= 14.1, < 15; Debian sid is on 15.x (above the
+    ceiling), so the rebuild ships the latest 14.x release.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 18:45:00 -0300

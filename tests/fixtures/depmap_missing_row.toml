@@ -1,0 +1,24 @@
+[meta]
+upstream_version = "1.4.7"
+homebrew_formula_sha = "d3802930b44c2aad088c14fddb2fc5b12e880076"
+
+# Note: no [[dep]] row for jinja2 (extra = "agent") — should be flagged.
+
+[[dep]]
+pypi_name = "rich"
+constraint = ">=14.1.0,<15.0.0"
+debian_name = "python3-rich"
+extra = "base"
+source = "noble"
+min_version = "14.1.0"
+
+[[dep]]
+pypi_name = "fastapi"
+constraint = ">=0.136.1,<0.137.0"
+debian_name = "python3-fastapi"
+extra = "server"
+source = "ppa"
+provenance = "debian-rebuild"
+debian_source_pkg = "python-fastapi"
+debian_suite = "experimental"
+min_version = "0.136.1"

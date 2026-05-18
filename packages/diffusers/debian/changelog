@@ -1,0 +1,16 @@
+diffusers (0.37.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of diffusers 0.37.1 for the Avalan PPA.
+  * Not in Debian; the runtime install_requires (importlib_metadata,
+    filelock, httpx, huggingface-hub, numpy, regex, requests,
+    safetensors, Pillow) all resolve from a mix of Noble's archive
+    and the Avalan PPA (huggingface-hub 0.34.0 + python3-pil 11.3.0
+    both ship from this PPA -- the rest are in Noble at versions
+    that satisfy diffusers's `dependency_versions_table.py` pins).
+  * No quilt patches: upstream's pyproject.toml only carries linter
+    config (no [build-system] block); pybuild falls back to a
+    classic setuptools build via setup.py, which Noble's
+    python3-setuptools handles directly. license = "Apache-2.0" is
+    not declared via PEP 639 in this release; nothing to rewrite.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 23:50:00 -0300

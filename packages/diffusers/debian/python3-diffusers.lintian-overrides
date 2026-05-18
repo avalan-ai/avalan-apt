@@ -1,0 +1,4 @@
+# Upstream does not ship a man page for the `diffusers-cli` CLI;
+# `diffusers-cli --help` covers usage. Writing a derived man page
+# would drift from upstream on every version bump.
+python3-diffusers: no-manual-page [usr/bin/diffusers-cli]

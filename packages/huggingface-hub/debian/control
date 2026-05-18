@@ -1,0 +1,37 @@
+Source: huggingface-hub
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 62),
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/huggingface/huggingface_hub
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-huggingface-hub
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: client library for the Hugging Face Hub (Avalan PPA transitive)
+ huggingface-hub is the client library for downloading and publishing
+ models, datasets, and Spaces on the Hugging Face Hub. This package
+ is built for the Avalan PPA because diffusers (Avalan's vendor)
+ requires `>= 0.34.0`, while Noble's archive ships 0.20.3. Pinned at
+ 0.34.0 -- the minimum that satisfies diffusers and the last release
+ line before huggingface-hub started requiring the much larger Rust
+ dependency surface in its 1.x series.
+ .
+ The optional `hf-xet` accelerator (Rust-based Xet protocol client)
+ is intentionally not declared as a Depends here: it lives behind
+ try/except ImportError guards in every Xet code path inside
+ huggingface_hub, so the HTTP-only paths Avalan actually uses keep
+ working without it. Callers who want Xet acceleration can install
+ `hf_xet` separately into a venv.

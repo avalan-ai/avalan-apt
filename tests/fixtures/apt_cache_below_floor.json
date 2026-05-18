@@ -1,0 +1,8 @@
+{
+  "python3-rich": [
+    ["13.7.1-1ubuntu1", "noble/main amd64 Packages"]
+  ],
+  "python3-jinja2": [
+    ["3.1.6-1", "noble/main amd64 Packages"]
+  ]
+}

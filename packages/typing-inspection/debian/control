@@ -1,0 +1,27 @@
+Source: typing-inspection
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatchling,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/pydantic/typing-inspection
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-typing-inspection
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: runtime typing introspection helpers (Avalan PPA transitive)
+ typing-inspection is a small helper that fastapi (and pydantic) use
+ to introspect annotated generic types at runtime. Packaged for the
+ Avalan PPA because fastapi requires `>= 0.4.2` and the package is
+ not in Debian.

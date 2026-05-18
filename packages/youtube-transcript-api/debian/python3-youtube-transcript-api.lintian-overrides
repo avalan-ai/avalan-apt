@@ -1,0 +1,4 @@
+# Upstream does not ship a man page for the `youtube_transcript_api`
+# CLI; `youtube_transcript_api --help` covers usage. Writing a derived
+# man page would drift from upstream on every version bump.
+python3-youtube-transcript-api: no-manual-page [usr/bin/youtube_transcript_api]

@@ -1,0 +1,9 @@
+# Noble ships lintian 2.117 which only validates up to Standards-Version
+# 4.6.2; we pin to 4.7.2 (the current Policy). Drop this once Noble's
+# lintian learns the newer Policy version.
+newer-standards-version 4.7.2 *
+
+# debian/upstream/metadata documents the Avalan Packaging GPG fingerprint.
+# Signing-Key isn't in DEP-12 but is the convention Debian uses for this
+# metadata, so the warning is intentional noise.
+upstream-metadata-field-unknown Signing-Key *

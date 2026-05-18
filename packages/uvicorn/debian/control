@@ -1,0 +1,29 @@
+Source: uvicorn
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatchling,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://www.uvicorn.org/
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-uvicorn
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: lightning-fast ASGI server (Avalan PPA pin)
+ uvicorn is an ASGI web server, built on uvloop and httptools, with
+ first-class HTTP/1.1 and WebSocket support. This rebuild pins 0.35.0
+ because Avalan tracks >= 0.35, < 0.36 and Debian sid carries 0.38.x
+ (above the ceiling). The lightweight install profile is built here;
+ uvicorn's optional `[standard]` extra (httptools, uvloop, watchfiles,
+ websockets, PyYAML, python-dotenv) is left to whatever those Noble
+ packages provide and not pulled in by this rebuild's Depends.

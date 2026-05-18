@@ -1,0 +1,24 @@
+Description: Use the older pyproject license-table form for Noble
+ Noble ships python3-setuptools at a version that predates PEP 639;
+ the SPDX-string `license = "MIT"` plus `license-files = [...]` pair
+ is rejected as ambiguous ("`project.license` must be valid exactly
+ by one definition (2 matches found)") during wheel metadata
+ validation. Rewrite to the legacy `license = { file = "LICENSE" }`
+ table form, which Noble's setuptools accepts and which produces an
+ equivalent license entry in the wheel metadata.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-18
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -4,8 +4,7 @@
+ description = "An easily customizable SQL parser and transpiler"
+ readme = "README.md"
+ authors = [{ name = "Toby Mao", email = "toby.mao@gmail.com" }]
+-license = "MIT"
+-license-files = ["LICENSE"]
++license = { file = "LICENSE" }
+ requires-python = ">= 3.9"
+ classifiers = [
+     "Development Status :: 5 - Production/Stable",

@@ -1,0 +1,12 @@
+typing-inspection (0.4.2-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of typing-inspection 0.4.2 for the Avalan PPA.
+  * Transitive runtime dep of python3-fastapi (also used by
+    python3-pydantic). Not in Debian.
+  * Ship a quilt patch (pyproject-license-for-noble) rewriting the
+    PEP 639 `license = "MIT"` + `license-files = ['LICENSE']` pair
+    to the legacy `license = { file = 'LICENSE' }` table form, the
+    same Noble-hatchling workaround the rest of the per-dep tree
+    uses.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 00:35:00 -0300

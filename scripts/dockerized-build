@@ -1,0 +1,38 @@
+#!/bin/sh
+# scripts/dockerized-build — run scripts/build-dep-package inside a
+# clean Noble container with the repo bind-mounted at /work.
+#
+# Builds (or reuses) the recipes/Dockerfile.builder image, mounts the
+# repo, and execs scripts/build-dep-package with whatever flags the
+# caller passes. Artifacts land in build/deps/ on the host exactly as
+# if the build had been native.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+image_tag=avalan-apt-builder:noble
+
+if [ "$#" -lt 1 ]; then
+    echo "usage: $(basename "$0") <pypi-name> [--mode source|binary]" >&2
+    exit 2
+fi
+
+# Build (or rebuild on Dockerfile changes) the builder image. The
+# first run is slow (apt fetches); subsequent runs are cached.
+docker build \
+    --quiet \
+    --tag "$image_tag" \
+    --file recipes/Dockerfile.builder \
+    recipes >/dev/null
+
+# Run the build. -t gives sane terminal sizing for dpkg-buildpackage's
+# progress output when invoked interactively; -i keeps stdin attached
+# for the rare prompt (e.g. dch).
+exec docker run --rm \
+    --volume "$repo_root:/work" \
+    --workdir /work \
+    "$image_tag" \
+    scripts/build-dep-package "$@"

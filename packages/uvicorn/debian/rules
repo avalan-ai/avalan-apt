@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=uvicorn
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need httptools, uvloop, watchfiles, websockets, and
+# python-dotenv at the floors pinned by uvicorn's `[standard]` extra,
+# plus pytest-xdist for the parallel runner. Skip at build time;
+# correctness comes from upstream CI plus Avalan's autopkgtest smoke
+# import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

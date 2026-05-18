@@ -1,0 +1,28 @@
+Source: humanize
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatch-vcs,
+ python3-hatchling,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/python-humanize/humanize
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-humanize
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Python humanize utilities (Avalan PPA rebuild)
+ humanize provides human-friendly representations of numbers, dates,
+ file sizes and time deltas — for example "3 minutes ago", "1.2 MB",
+ or "12 thousand". This rebuild ships the version Avalan pins (>= 4.12.3)
+ because Ubuntu Noble carries an older release.

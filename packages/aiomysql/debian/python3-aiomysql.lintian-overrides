@@ -1,0 +1,4 @@
+# Upstream's sdist ships a .gitignore at the package root (visible
+# inside the wheel's payload too); harmless once installed. Excluding
+# it via setuptools is brittle across releases, so accept the file.
+python3-aiomysql: package-contains-vcs-control-file [usr/lib/python3/dist-packages/aiomysql/.gitignore]

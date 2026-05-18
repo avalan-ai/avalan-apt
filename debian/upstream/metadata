@@ -1,0 +1,9 @@
+---
+Bug-Database: https://github.com/avalan-ai/avalan/issues
+Bug-Submit: https://github.com/avalan-ai/avalan/issues/new
+Repository: https://github.com/avalan-ai/avalan.git
+Repository-Browse: https://github.com/avalan-ai/avalan
+# Signing-Key is filled in during Phase 7 once the Avalan Packaging
+# GPG key exists. The full 40-char fingerprint, no spaces, replaces
+# the placeholder below.
+Signing-Key: PLACEHOLDER-FILLED-IN-PHASE-7

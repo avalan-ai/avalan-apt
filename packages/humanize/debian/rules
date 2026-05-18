@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=humanize
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests pull `freezegun` + `pytest-cov` (not in Noble at
+# matching versions) and assume an editable install. Skip at build
+# time; correctness comes from upstream CI and the Avalan smoke test.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."

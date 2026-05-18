@@ -1,0 +1,8 @@
+youtube-transcript-api (1.2.4-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of youtube-transcript-api 1.2.4 for the
+    Avalan PPA. Not in Debian; hand-packaged from the PyPI sdist.
+  * Avalan tracks >= 1.2.2, < 2.0; pin 1.2.4 as the latest 1.x
+    release at the time of audit.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 19:30:00 -0300

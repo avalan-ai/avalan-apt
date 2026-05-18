@@ -1,0 +1,16 @@
+humanize (4.12.3-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of humanize 4.12.3 for the Avalan PPA.
+  * Noble ships 4.9.0 and Debian sid ships 4.12.1, both below the
+    floor pinned in debian/dependency-map.toml; hand-package from the
+    upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-metadata-for-noble) that softens
+    two pyproject.toml entries Noble's python3-hatchling rejects
+    during wheel metadata validation: the PEP 639 license-files
+    list (rewritten to the older `license = { file = "LICENCE" }`
+    table form) and the `Programming Language :: Python :: 3.14`
+    trove classifier (unknown to Noble's classifier table).
+    Neither change affects runtime behavior; both lines were
+    informational only.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 18:30:00 -0300

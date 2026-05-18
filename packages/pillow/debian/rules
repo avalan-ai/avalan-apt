@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=pillow
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's test suite is extensive (depends on freetype/raqm/avif
+# at versions we deliberately don't ship, plus ~50 MB of image
+# fixtures fetched at runtime by depends/install_extra_test_images.sh).
+# Skip at build time; correctness comes from upstream CI plus the
+# Avalan autopkgtest smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

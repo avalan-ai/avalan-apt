@@ -1,0 +1,38 @@
+Description: Soften pyproject for Noble's setuptools
+ Upstream pins strict equality for the entire build-system requires
+ list (`setuptools==80.9.0`, `setuptools-scm==8.3.1`, `wheel==0.45.1`,
+ `auditwheel==6.2.0`) because the upstream wheels are produced under
+ a tightly-controlled CI matrix that bundles browser drivers per
+ platform. Our PPA rebuild only produces a pure-Python wheel (no
+ driver bundles), so we just need the metadata to be readable: relax
+ to `setuptools >= 62`, `setuptools-scm >= 6` -- the floor Noble has
+ and what `pybuild-plugin-pyproject` is happy with -- and drop the
+ wheel/auditwheel entries entirely (pybuild calls the backend
+ directly, no auditwheel involvement).
+ .
+ Also rewrite the PEP 639 `license = "Apache-2.0"` SPDX string to
+ the legacy `license = { text = "Apache-2.0" }` table form, which
+ Noble's setuptools accepts ("project.license must be valid exactly
+ by one definition" is what the modern form gets you on 68.x).
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-18
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,5 +1,5 @@
+ [build-system]
+-requires = ["setuptools==80.9.0", "setuptools-scm==8.3.1", "wheel==0.45.1", "auditwheel==6.2.0"]
++requires = ["setuptools >= 62", "setuptools-scm >= 6"]
+ build-backend = "setuptools.build_meta"
+ 
+ [project]
+@@ -9,7 +9,7 @@
+     {name = "Microsoft Corporation"}
+ ]
+ readme = "README.md"
+-license = "Apache-2.0"
++license = { text = "Apache-2.0" }
+ dynamic = ["version"]
+ requires-python = ">=3.9"
+ # Please when changing dependencies run the following commands to update requirements.txt:

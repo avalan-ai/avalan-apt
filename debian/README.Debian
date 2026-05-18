@@ -1,0 +1,55 @@
+avalan for Debian
+=================
+
+This package installs the Avalan SDK and the `avalan` / `avl`
+command-line tools without pulling in heavyweight or
+hardware-specific dependencies. A few features need extra setup,
+described below.
+
+Playwright browsers
+-------------------
+
+Playwright browsers are NOT installed and no browser is pulled as a
+dependency. Browser-using Avalan features (web automation, scraping,
+etc.) will fail until you provide one. Two supported paths:
+
+  1. System browser (recommended on shared hosts):
+
+       sudo apt install chromium      # or: sudo apt install firefox
+
+     then set `PLAYWRIGHT_BROWSERS_PATH=/usr/bin` and pass the system
+     executable via Playwright's `executable_path` API.
+
+  2. Playwright-managed browsers (per-user):
+
+       playwright install
+
+     binaries land under `~/.cache/ms-playwright/`.
+
+Either way, the .deb stays small and `apt install avalan` never
+downloads a browser in the background.
+
+Heavyweight extras
+------------------
+
+Features that depend on GPU/Apple/CUDA stacks, large model bundles,
+or hardware-specific libraries are not in the .deb. The upstream
+extras that are out of scope: local, vision, audio, memory, mlx,
+apple, nvidia, vllm, quantization, ds4, secrets, translation.
+
+To use them, create a virtualenv and install with pip on top of the
+system Avalan install:
+
+    python3 -m venv ~/.avalan/venv
+    source ~/.avalan/venv/bin/activate
+    pip install "avalan[local]"        # or [vision], [audio], ...
+
+API keys
+--------
+
+Vendor backends (OpenAI, Anthropic, Google, AWS) read their
+credentials from environment variables at runtime. The package does
+not configure them — set them in your shell, .env, systemd unit, or
+secret store as appropriate.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>

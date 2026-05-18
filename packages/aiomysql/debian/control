@@ -1,0 +1,30 @@
+Source: aiomysql
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 42),
+ python3-setuptools-scm,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/aio-libs/aiomysql
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-aiomysql
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: asyncio-friendly MySQL driver (Avalan PPA pin)
+ aiomysql is an asyncio bridge in front of the PyMySQL wire-protocol
+ implementation, exposing async cursors and connection pools. Noble
+ ships 0.1.1 (below floor) and Debian sid ships 0.3.2 (above ceiling);
+ this rebuild pins 0.2.0 to satisfy Avalan's `>= 0.2, < 0.3` window.
+ The optional `[sa]` extra (sqlalchemy < 1.4) is not declared here --
+ callers depend on Avalan's PPA python3-sqlalchemy 2.x instead.

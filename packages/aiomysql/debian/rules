@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=aiomysql
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+# setuptools_scm reads the version from PKG-INFO when building from an
+# sdist, but pin it explicitly so a stray .git tree on the build host
+# cannot shadow it.
+export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AIOMYSQL=0.2.0
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need a running MySQL/MariaDB instance plus
+# pytest-asyncio at floors that float across releases. Skip at build
+# time; correctness for the rebuild comes from upstream CI and
+# Avalan's autopkgtest smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

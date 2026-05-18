@@ -1,0 +1,27 @@
+Source: starlette
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatchling,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://www.starlette.io/
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-starlette
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: lightweight ASGI framework / toolkit (Avalan PPA transitive)
+ Starlette is the minimal ASGI framework that FastAPI is built on
+ top of. Packaged for the Avalan PPA because FastAPI's `vendors`
+ stack requires `starlette >= 0.46.0` and Noble's archive carries
+ 0.36.x; pinned at the current 1.0.0 release.

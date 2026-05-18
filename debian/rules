@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=avalan
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's full test suite needs models, browsers, and API keys.
+# Skip it at build time; autopkgtest covers a smoke layer instead.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

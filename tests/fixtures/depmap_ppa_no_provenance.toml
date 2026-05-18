@@ -1,0 +1,28 @@
+[meta]
+upstream_version = "1.4.7"
+homebrew_formula_sha = "d3802930b44c2aad088c14fddb2fc5b12e880076"
+
+[[dep]]
+pypi_name = "rich"
+constraint = ">=14.1.0,<15.0.0"
+debian_name = "python3-rich"
+extra = "base"
+source = "noble"
+min_version = "14.1.0"
+
+[[dep]]
+pypi_name = "jinja2"
+constraint = ">=3.1.6,<4.0.0"
+debian_name = "python3-jinja2"
+extra = "agent"
+source = "noble"
+min_version = "3.1.6"
+
+[[dep]]
+pypi_name = "fastapi"
+constraint = ">=0.136.1,<0.137.0"
+debian_name = "python3-fastapi"
+extra = "server"
+source = "ppa"
+# provenance intentionally absent — should fail metadata audit
+min_version = "0.136.1"

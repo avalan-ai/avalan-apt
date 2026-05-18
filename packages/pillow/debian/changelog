@@ -1,0 +1,24 @@
+pillow (11.3.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of Pillow 11.3.0 for the Avalan PPA.
+  * Noble ships python3-pil 10.2.0 (below Avalan's floor of 11.3.0)
+    and Debian sid ships 12.2.0 (above Avalan's ceiling of < 12), so
+    the rebuild pins the upstream 11.3.0 sdist.
+  * Ship a quilt patch (pyproject-for-noble) that relaxes the
+    upstream `setuptools>=77` build-system requirement to `>= 62`
+    (Noble ships 68.x, which is enough for Pillow's _custom_build
+    backend) and rewrites the PEP 639 `license = "MIT-CMU"` +
+    `license-files = [...]` pair back to the legacy
+    `license = { text = "MIT-CMU" }` table form. Wheel metadata is
+    equivalent; no runtime impact.
+  * First binary (arch-dependent) source package in the per-dep tree.
+    Build-Depends carries the standard codec/library development
+    headers Pillow's setup.py looks for at compile time
+    (zlib1g-dev, libjpeg-dev, libtiff-dev, libwebp-dev,
+    libfreetype-dev, liblcms2-dev, libopenjp2-7-dev). Optional
+    headers (libimagequant-dev, libraqm-dev, libavif-dev,
+    libxcb1-dev for screen capture, tk-dev for ImageTk) are not
+    included in this rebuild; add them on demand if a downstream
+    feature needs them.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 20:00:00 -0300

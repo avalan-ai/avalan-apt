@@ -1,0 +1,36 @@
+Source: diffusers
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 62),
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/huggingface/diffusers
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-diffusers
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Hugging Face diffusion pipelines for image and audio
+ diffusers from Hugging Face wraps pretrained diffusion pipelines
+ (Stable Diffusion, AudioLDM, and many more) behind a uniform Python
+ API and exposes the lower-level UNet / VAE / scheduler components
+ for custom training and inference. Avalan ships it in its `vendors`
+ extras at `>= 0.37.1, < 0.38`; the rebuild lands at 0.37.1.
+ .
+ The heavy ML runtime dependencies (torch, accelerate, transformers,
+ jax, etc.) are intentionally not declared here -- diffusers's
+ install_requires is the minimal interface set (Pillow, numpy,
+ huggingface-hub, safetensors, regex, requests, httpx, filelock,
+ importlib_metadata), and per Avalan's APT.md heavyweight extras
+ stay out of the apt-installed package. Callers who need accelerate
+ or torch install them with pip into a user-controlled venv on top
+ of the system install.

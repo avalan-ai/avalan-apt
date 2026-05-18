@@ -1,0 +1,17 @@
+huggingface-hub (0.34.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of huggingface-hub 0.34.0 for the Avalan PPA.
+  * Transitive runtime dep of python3-diffusers (which Avalan ships
+    in its `vendors` extras); diffusers requires >= 0.34, < 2.0 and
+    Noble's archive only carries 0.20.3, so the rebuild lands at the
+    minimum version that satisfies the constraint.
+  * Ship a quilt patch (drop-hf-xet-requirement) that strips the
+    platform-guarded `hf-xet >= 1.1.3` install_requires entry from
+    setup.py. hf-xet is a Rust-based Xet protocol accelerator that
+    upstream uses for large-file transfers; every reference inside
+    huggingface_hub is wrapped in `try: import hf_xet ... except
+    ImportError`, so dropping it makes the HTTP-only download paths
+    Avalan exercises just work without pulling a new Rust dep into
+    the PPA.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Mon, 18 May 2026 23:30:00 -0300

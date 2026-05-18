@@ -1,0 +1,12 @@
+[project]
+name = "avalan"
+version = "1.4.7"
+dependencies = [
+  "rich>=14.1.0,<15.0.0",
+]
+
+[project.optional-dependencies]
+agent = ["jinja2>=3.1.6,<4.0.0"]
+server = ["fastapi>=0.136.1,<0.137.0"]
+# Heavyweight extras the .deb intentionally drops:
+local = ["torch>=2.11.0,<2.12.0"]

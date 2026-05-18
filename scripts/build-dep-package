@@ -1,0 +1,13 @@
+#!/bin/sh
+# scripts/build-dep-package -- drive prepare-dep-source +
+# dpkg-buildpackage for one dependency row in
+# debian/dependency-map.toml.
+#
+# Thin POSIX shim around scripts/build_dep_package.py, mirroring the
+# split used by prepare-dep-source / check-dependencies so the actual
+# logic stays importable for the test suite.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/build_dep_package.py" "$@"

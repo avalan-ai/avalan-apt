@@ -1,0 +1,52 @@
+#!/bin/sh
+# scripts/prepare-source — fetch and verify the upstream Avalan sdist,
+# unpack it under build/, and overlay this repo's debian/ tree onto it.
+
+set -eu
+set -x
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+# Single source of truth for the upstream pin (release.toml).
+release_field() {
+    python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['$1'])"
+}
+version=$(release_field version)
+sdist_url=$(release_field sdist_url)
+expected_sha=$(release_field sha256)
+
+mkdir -p build
+
+# Debian wants the upstream tarball as <source>_<version>.orig.tar.gz,
+# so download directly under that name — no rename/symlink step later.
+orig_tarball="build/avalan_${version}.orig.tar.gz"
+
+if [ ! -f "$orig_tarball" ] \
+   || [ "$(sha256sum "$orig_tarball" | awk '{print $1}')" != "$expected_sha" ]; then
+    rm -f "$orig_tarball"
+    wget --no-verbose -O "$orig_tarball" "$sdist_url"
+fi
+
+actual_sha=$(sha256sum "$orig_tarball" | awk '{print $1}')
+if [ "$actual_sha" != "$expected_sha" ]; then
+    set +x
+    echo "FATAL: sha256 mismatch for $orig_tarball" >&2
+    echo "  expected: $expected_sha" >&2
+    echo "  got:      $actual_sha" >&2
+    exit 1
+fi
+
+# Re-extract from scratch so the overlay starts on a known-clean tree.
+unpack_dir="build/avalan-${version}"
+rm -rf "$unpack_dir"
+tar -C build -xf "$orig_tarball"
+test -d "$unpack_dir"
+
+cp -a debian "$unpack_dir/debian"
+
+# Final stdout line is the prepared source tree path — callers can do
+# `src=$(scripts/prepare-source)` to capture it. Trace goes to stderr.
+set +x
+echo "$unpack_dir"
