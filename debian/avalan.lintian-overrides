@@ -1,0 +1,5 @@
+# /usr/bin/avalan and /usr/bin/avl share a single Click-style help (both
+# resolve to avalan.cli.__main__:main); upstream does not ship man pages
+# and the .deb does not synthesise them, so accept the absence.
+avalan: no-manual-page [usr/bin/avalan]
+avalan: no-manual-page [usr/bin/avl]

@@ -10,8 +10,15 @@ avalan (1.4.8-0ubuntu1~ppa1~noble1) noble; urgency=medium
     constraint relaxations (no PPA rebuild required for these).
   * Relax versioned Depends to match the new upstream floors
     (pydantic >= 2.0, fastapi >= 0.101.0, uvicorn >= 0.27.0, etc.).
+  * Mirror upstream's PEP 621 [project] metadata into [tool.poetry]
+    via a quilt patch so Noble's poetry-core 1.9 (the only version in
+    the archive) can build the wheel; the [project] table is left
+    intact for pip-on-newer-hosts.
+  * Add a per-binary lintian override for the missing manpages on
+    /usr/bin/avalan and /usr/bin/avl (both resolve to the same Click
+    help; upstream ships no man pages).
 
- -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 15:24:18 -0300
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 16:10:00 -0300
 
 avalan (1.4.7-0ubuntu1~ppa1~noble1) noble; urgency=medium
 

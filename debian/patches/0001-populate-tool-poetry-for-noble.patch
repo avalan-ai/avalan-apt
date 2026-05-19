@@ -1,0 +1,45 @@
+Description: Populate [tool.poetry] so Noble's poetry-core 1.9 can build the wheel
+ Upstream switched to PEP 621 ([project]) for Avalan's package metadata
+ and pins poetry-core >= 2.1.3 for native [project] support in the build
+ backend. Noble ships poetry-core 1.9, which only reads [tool.poetry]
+ and rejects pyproject.toml when those fields are absent ("The fields
+ ['authors', 'description', 'name', 'version'] are required in package
+ mode").
+ .
+ Mirror the [project] metadata into [tool.poetry] so the existing
+ poetry-dynamic-versioning build backend in Noble (1.2, with the
+ backend disabled by enable=false anyway) can resolve the package
+ through poetry-core 1.9. The [project] table is left untouched so the
+ upstream sdist still installs verbatim via pip on hosts with a newer
+ poetry-core.
+ .
+ Drop this patch when Noble (or the Avalan PPA) ships poetry-core 2.x.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-19
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -196,6 +196,23 @@
+ convention = "pep257"
+ 
+ [tool.poetry]
++name = "avalan"
++version = "1.4.8"
++description = "Multi-backend, multi-modal micro-framework for AI agent development, orchestration, and deployment"
++authors = ["The Avalan Team <avalan@avalan.ai>"]
++license = "MIT"
++readme = "README.md"
++packages = [{include = "avalan", from = "src"}]
++
++[tool.poetry.scripts]
++avl = "avalan.cli.__main__:main"
++avalan = "avalan.cli.__main__:main"
++
++[tool.poetry.dependencies]
++python = ">=3.11,<3.14"
++packaging = ">=24.0,<27.0"
++humanize = ">=4.12.3,<5.0.0"
++rich = ">=13.7.0,<16.0.0"
+ 
+ [tool.poetry.group.test]
+ optional = true
