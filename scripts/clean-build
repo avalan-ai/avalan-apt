@@ -1,0 +1,63 @@
+#!/bin/sh
+# scripts/clean-build -- run sbuild against the Avalan .dsc in a Noble
+# schroot, with the Avalan PPA exposed as an extra source so the
+# binary Build-Depends resolve.
+#
+# Same shape as scripts/build-source / scripts/build-binary: looks up
+# the upstream version from release.toml, finds the .dsc under
+# build/, hands it to sbuild, and shells out to lint-package on
+# success. The actual chroot setup (sbuild-createchroot --dist=noble
+# --arch=amd64) is a one-time host operation done outside this script;
+# see README.md.
+#
+# sbuild is Debian-only; non-Debian dev hosts get a clear FATAL
+# instead of a confusing `command not found`.
+
+set -eu
+set -x
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+require_tool() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        set +x
+        echo "FATAL: '$1' not on PATH." >&2
+        echo "       sbuild is Debian-only -- run scripts/clean-build" >&2
+        echo "       from a Noble VM/container with sbuild installed" >&2
+        echo "       and a noble-amd64 schroot configured." >&2
+        exit 1
+    fi
+}
+require_tool sbuild
+
+version=$(python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['version'])")
+dsc=$(ls -1 "build/avalan_${version}"-*.dsc 2>/dev/null | head -n1 || true)
+if [ -z "$dsc" ]; then
+    set +x
+    echo "FATAL: no avalan_${version}-*.dsc under build/." >&2
+    echo "       Run scripts/build-source first." >&2
+    exit 1
+fi
+
+# Expose the Avalan PPA as an extra source so the binary build can
+# resolve the per-dep python3-* deps that don't live in Noble's
+# archive. Override AVALAN_PPA_LINE to point at the staging PPA
+# during private dry-run uploads.
+ppa_line=${AVALAN_PPA_LINE:-"deb https://ppa.launchpadcontent.net/avalan-ai/avalan/ubuntu noble main"}
+
+# --dist + --arch pin the Noble amd64 environment. --no-arch-all
+# would skip the Architecture: all binary; we want it (avalan is
+# Architecture: all). --no-clean-source skips re-running
+# dpkg-buildpackage -S on the host; we feed the .dsc directly.
+sbuild \
+    --dist=noble \
+    --arch=amd64 \
+    --no-clean-source \
+    --extra-repository="$ppa_line" \
+    "$dsc"
+
+if [ -x scripts/lint-package ]; then
+    scripts/lint-package
+fi
