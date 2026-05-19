@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=anyio
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+# setuptools-scm derives the version from VCS metadata that the sdist
+# does not include; pin it explicitly so the wheel inherits the
+# upstream tag rather than `0.0.0`.
+export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_ANYIO=4.12.1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests pull pytest-asyncio + trio + uvloop + a network
+# fixture suite at floors that don't all match Noble's archive. Skip
+# at build time; correctness comes from upstream CI plus the Avalan
+# autopkgtest smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."

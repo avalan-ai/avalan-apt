@@ -1,0 +1,33 @@
+Source: anyio
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+ python3-setuptools-scm,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/agronholm/anyio
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-anyio
+Architecture: all
+Depends:
+ python3-idna,
+ python3-sniffio,
+ python3-typing-extensions,
+ ${misc:Depends},
+ ${python3:Depends},
+Description: high-level concurrency / networking for asyncio + Trio (Avalan PPA pin)
+ anyio is a high-level concurrency and networking framework that runs
+ on top of either the asyncio or Trio event loops. This package is
+ built for the Avalan PPA because mcp (Avalan's `server` extras)
+ requires `anyio >= 4.5` while Noble ships 4.2.0. Pinned at 4.12.1 to
+ mirror Debian sid; the same build also satisfies google-genai's
+ stricter `>= 4.8.0` floor once that row is packaged.

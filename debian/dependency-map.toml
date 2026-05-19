@@ -169,6 +169,22 @@ sdist_sha256 = "9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d
 min_version = "0.4"
 notes = "Transitive runtime dep of mcp (and a2a-sdk, once packaged). Not in Debian; pin 0.4.3 sdist. Zero runtime deps."
 
+# Transitive of mcp -- mcp requires anyio >= 4.5; Noble ships 4.2.0
+# (below floor). Hand-package 4.12.1 from PyPI; this also satisfies
+# google-genai's stricter `>= 4.8.0` once that row is packaged.
+[[dep]]
+pypi_name = "anyio"
+constraint = ">=4.5"
+debian_name = "python3-anyio"
+extra = "server"
+transitive_of = "mcp"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/96/f0/5eb65b2bb0d09ac6776f2eb54adee6abe8228ea05b20a5ad0e4945de8aac/anyio-4.12.1.tar.gz"
+sdist_sha256 = "41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703"
+min_version = "4.5"
+notes = "Transitive runtime dep of mcp (anyio >= 4.5; Noble ships 4.2.0). Flipped from debian-rebuild because sid's pyproject pins setuptools >= 77 and uses the PEP 639 SPDX license-string form Noble's setuptools 68 rejects; we patch on our side and per APT.md we do not patch debian-rebuild rows. Pinned at 4.12.1, the latest sid version; runtime deps (exceptiongroup, idna, typing-extensions) are in Noble."
+
 [[dep]]
 pypi_name = "pydantic"
 constraint = ">=2.11.7,<3.0.0"

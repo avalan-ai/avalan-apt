@@ -1,0 +1,19 @@
+anyio (4.12.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of anyio 4.12.1 for the Avalan PPA.
+  * Transitive runtime dep of mcp (Avalan's `server` extras). Noble
+    ships 4.2.0 (below the `>= 4.5` floor mcp asks for); the same
+    pin also satisfies google-genai's `>= 4.8.0` once that row is
+    packaged.
+  * Hand-packaged from the upstream PyPI sdist rather than rebuilt
+    from Debian sid because sid's source pins `setuptools >= 77` and
+    uses the PEP 639 SPDX `license = "MIT"` string form, both of
+    which Noble's python3-setuptools 68 rejects during wheel
+    metadata validation.
+  * Ship a quilt patch (pyproject-for-noble) that rewrites the SPDX
+    license string to the legacy `license = { file = "LICENSE" }`
+    table form, relaxes the `setuptools >= 77` build-system pin to
+    just `setuptools`, and drops the `Programming Language :: Python
+    :: 3.14` trove classifier unknown to Noble. No runtime impact.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 11:00:00 -0300
