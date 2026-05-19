@@ -44,6 +44,7 @@ RUN apt-get update \
         python3-all-dev \
         python3-babel \
         flit \
+        python3-hatch-fancy-pypi-readme \
         python3-hatch-vcs \
         python3-hatchling \
         python3-installer \

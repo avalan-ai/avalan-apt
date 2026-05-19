@@ -1,0 +1,18 @@
+anthropic (0.71.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of anthropic 0.71.1 for the Avalan PPA.
+  * Debian sid carries 0.91.x (above Avalan's `< 0.72` ceiling), so
+    the rebuild pins the upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-for-noble) that does three things:
+      - relax the strict `hatchling==1.26.3` build pin to
+        `hatchling>=1.21` (Noble ships 1.21.0);
+      - drop `jiter>=0.4.0,<1` from install_requires -- jiter is a
+        Rust accelerator that is not in Noble, and every reference
+        to it inside anthropic is a lazy `from jiter import
+        from_json` inside the streaming-tool-input delta handler;
+      - rewrite the PEP 639 `license = "MIT"` SPDX string to the
+        legacy `license = { text = "MIT" }` table form, the
+        Noble-hatchling workaround the rest of the per-dep tree
+        uses.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 01:30:00 -0300

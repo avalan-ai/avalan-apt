@@ -1,0 +1,35 @@
+Source: anthropic
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatch-fancy-pypi-readme,
+ python3-hatchling,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/anthropics/anthropic-sdk-python
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-anthropic
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: official Python client for the Anthropic API (Avalan PPA pin)
+ The anthropic SDK provides typed Python bindings for the Anthropic
+ Messages API plus async / sync transports, response streaming, and
+ a Bedrock / Vertex integration shim. Avalan ships it in its
+ `vendors` extra at `>= 0.71, < 0.72`; Debian sid carries 0.91.x
+ (above the ceiling), so the rebuild pins 0.71.1.
+ .
+ The optional `jiter` Rust accelerator is intentionally not declared
+ as a Depends -- it lives behind a lazy `from jiter import from_json`
+ inside the streaming-tool-input delta handler, so the bulk of the
+ SDK works without it. Callers exercising that specific path get an
+ ImportError telling them to `pip install jiter` into a venv.

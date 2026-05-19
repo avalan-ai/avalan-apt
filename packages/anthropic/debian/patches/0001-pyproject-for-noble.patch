@@ -1,0 +1,53 @@
+Description: Soften pyproject for Noble + drop the Rust jiter dep
+ Three small, independent metadata tweaks bundled into one patch
+ because they collapse to the same goal -- making anthropic build
+ against Noble's archive without a Rust toolchain:
+ .
+ * Rewrite the PEP 639 SPDX string `license = "MIT"` to the legacy
+   `license = { text = "MIT" }` table form Noble's older hatchling
+   accepts (same workaround the rest of the per-dep tree uses).
+ * Relax the strict `hatchling==1.26.3` build-system pin to
+   `hatchling>=1.21`; Noble ships python3-hatchling 1.21.0 and
+   the metadata anthropic uses works on both 1.21 and 1.26.
+ * Drop the `jiter>=0.4.0, <1` install requirement. jiter is a
+   Rust-based JSON accelerator that's not in Noble, and every
+   reference to it inside the anthropic source is a lazy
+   `from jiter import from_json` inside the streaming-tool-input
+   delta handler (`anthropic/lib/streaming/_messages.py:441`,
+   `_beta_messages.py:446`). The HTTP / message paths Avalan
+   exercises do not touch that import, so dropping it from
+   install_requires lets the PPA ship a pure-Python wheel.
+   Callers exercising the streaming + tool-input combination get
+   a clear ImportError telling them to `pip install jiter`.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-19
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -3,7 +3,7 @@
+ version = "0.71.1"
+ description = "The official Python library for the anthropic API"
+ dynamic = ["readme"]
+-license = "MIT"
++license = { text = "MIT" }
+ authors = [
+ { name = "Anthropic", email = "support@anthropic.com" },
+ ]
+@@ -14,7 +14,6 @@
+     "anyio>=3.5.0, <5",
+     "distro>=1.7.0, <2",
+     "sniffio",
+-    "jiter>=0.4.0, <1",
+     "docstring-parser>=0.15,<1",
+ ]
+ requires-python = ">= 3.8"
+@@ -81,7 +80,7 @@
+ ]
+ 
+ [build-system]
+-requires = ["hatchling==1.26.3", "hatch-fancy-pypi-readme"]
++requires = ["hatchling>=1.21", "hatch-fancy-pypi-readme"]
+ build-backend = "hatchling.build"
+ 
+ [tool.hatch.build]
