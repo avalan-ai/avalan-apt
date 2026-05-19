@@ -1,0 +1,11 @@
+httpx-sse (0.4.3-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of httpx-sse 0.4.3 for the Avalan PPA.
+  * Transitive runtime dep of mcp (Avalan's `server` extras). Not in
+    Debian or Noble, so hand-package from the upstream PyPI sdist.
+  * Pure Python with zero runtime dependencies. Build is a vanilla
+    pybuild/pyproject run against setuptools; the version is resolved
+    from ``httpx_sse.__version__`` via setuptools' attr backend, so
+    no setuptools-scm git probe is required.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 10:00:00 -0300

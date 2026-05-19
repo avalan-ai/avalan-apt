@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=httpx_sse
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need pytest-asyncio + a local SSE server fixture
+# and aim for 100% branch coverage. Skip at build time; correctness
+# comes from upstream CI plus the Avalan smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."

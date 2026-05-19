@@ -1,0 +1,35 @@
+Source: httpx-sse
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+ python3-setuptools-scm,
+ python3-wheel,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/florimondmanca/httpx-sse
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-httpx-sse
+Architecture: all
+Depends:
+ python3-httpx,
+ ${misc:Depends},
+ ${python3:Depends},
+Description: consume Server-Sent Events (SSE) with httpx (Avalan PPA transitive)
+ httpx-sse is a small pure-Python helper that consumes Server-Sent
+ Event streams over an httpx response, exposing them as an iterable of
+ ``ServerSentEvent`` records. This package is built for the Avalan PPA
+ because mcp (Avalan's `server` extras) requires `httpx-sse >= 0.4`
+ and Noble does not ship the distribution. Pinned at 0.4.3, the
+ latest release in the 0.4.x line.
+ .
+ Upstream's pyproject.toml declares no install_requires even though
+ every public entry point imports httpx; python3-httpx is declared
+ here explicitly so apt resolves it transitively.

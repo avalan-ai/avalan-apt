@@ -154,6 +154,21 @@ sdist_sha256 = "0f47e1820f8f8f941466b39749eb1d1839a04caddca2bc60e9d46e8a99914924
 min_version = "1.12.3"
 notes = "Not in Debian; pin 1.27.1 sdist."
 
+# Transitive of mcp -- mcp requires httpx-sse >= 0.4; not in Noble at
+# all (PyPI-only, pure-Python leaf with zero runtime deps).
+[[dep]]
+pypi_name = "httpx-sse"
+constraint = ">=0.4"
+debian_name = "python3-httpx-sse"
+extra = "server"
+transitive_of = "mcp"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/0f/4c/751061ffa58615a32c31b2d82e8482be8dd4a89154f003147acee90f2be9/httpx_sse-0.4.3.tar.gz"
+sdist_sha256 = "9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d"
+min_version = "0.4"
+notes = "Transitive runtime dep of mcp (and a2a-sdk, once packaged). Not in Debian; pin 0.4.3 sdist. Zero runtime deps."
+
 [[dep]]
 pypi_name = "pydantic"
 constraint = ">=2.11.7,<3.0.0"
