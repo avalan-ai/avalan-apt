@@ -87,8 +87,10 @@ jobs:
       # setuptools+setuptools_scm, setuptools_scm with a quilt
       # relax, setuptools+drop-rust-extension, setuptools with C
       # codec headers, and the GitHub-source + driver-skip path),
-      # plus one debian-rebuild row so the dpkg-source + dch retarget
-      # path stays exercised.
+      # plus two debian-rebuild rows so the dpkg-source + dch
+      # retarget path stays exercised (packaging) and the
+      # upstream-warning-tolerant lintian path stays exercised
+      # (jinja2 — sid omits Priority on its binary packages).
       matrix:
         dep:
           - humanize
@@ -99,6 +101,7 @@ jobs:
           - pillow
           - playwright
           - packaging
+          - jinja2
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
@@ -133,6 +136,7 @@ jobs:
             python3-markupsafe \
             python3-numpy \
             python3-packaging \
+            python3-pallets-sphinx-themes \
             python3-pdm-backend \
             python3-poetry-core \
             python3-pretend \
@@ -141,6 +145,8 @@ jobs:
             python3-setuptools \
             python3-setuptools-scm \
             python3-sphinx \
+            python3-sphinx-issues \
+            python3-trio \
             quilt \
             wget \
             xz-utils \
@@ -152,6 +158,8 @@ jobs:
         run: scripts/build-dep-package "$DEP" --mode binary
 
       - name: Lintian the .changes
+        env:
+          DEP: ${{ matrix.dep }}
         run: |
           set -e
           # PyPI name and Debian source name differ for some rows
@@ -160,4 +168,14 @@ jobs:
           # non-_source.changes file under build/deps/.
           changes=$(ls -1 build/deps/*_*_*.changes | grep -v _source.changes | head -n1)
           test -n "$changes"
-          lintian --pedantic --info --fail-on error,warning "$changes"
+          # debian-rebuild rows ship sid's source unchanged; we don't
+          # carry Avalan-specific patches, so we don't fail on
+          # warnings that originate in the upstream source (e.g. sid's
+          # jinja2 omits Priority on its binary packages). Errors
+          # still gate.
+          provenance=$(python3 -c "import os, tomllib; data = tomllib.load(open('debian/dependency-map.toml', 'rb')); print(next((d.get('provenance', '') for d in data['dep'] if d['pypi_name'] == os.environ['DEP']), ''))")
+          fail_on=error,warning
+          if [ "$provenance" = "debian-rebuild" ]; then
+              fail_on=error
+          fi
+          lintian --pedantic --info --fail-on "$fail_on" "$changes"
