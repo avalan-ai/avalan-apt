@@ -1,0 +1,14 @@
+fastapi (0.136.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of fastapi 0.136.1 for the Avalan PPA.
+  * Debian sid carries 0.135.3 (below Avalan's `>= 0.136.1` floor),
+    so the rebuild pins the upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-for-noble) rewriting the PEP 639
+    `license = "MIT"` + `license-files = [...]` pair to the legacy
+    `license = { file = "LICENSE" }` table form and dropping the
+    `Programming Language :: Python :: 3.14` trove classifier --
+    both rejected by Noble's pdm-backend / setuptools during
+    `dh_auto_clean`. Same Noble-pdm-backend workaround as the rest
+    of the per-dep tree.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 01:00:00 -0300

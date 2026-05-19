@@ -1,0 +1,34 @@
+Description: Soften pyproject metadata for Noble's pdm-backend
+ Noble's pdm-backend / setuptools rejects two pieces of upstream's
+ pyproject during `dh_auto_clean`: the PEP 639 `license = "MIT"` +
+ `license-files = [...]` pair (older validator wants the legacy
+ table form), and the `Programming Language :: Python :: 3.14`
+ trove classifier (unknown to the Noble classifier table).
+ Translate both back to the form Noble accepts. Equivalent wheel
+ metadata; no runtime impact.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-19
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -9,10 +9,7 @@
+ dynamic = []
+ description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
+ readme = "README.md"
+-license = "MIT"
+-license-files = [
+-    "LICENSE",
+-]
++license = { file = "LICENSE" }
+ requires-python = ">=3.10"
+ authors = [
+     { name = "Sebastián Ramírez", email = "tiangolo@gmail.com" },
+@@ -41,7 +38,6 @@
+     "Programming Language :: Python :: 3.11",
+     "Programming Language :: Python :: 3.12",
+     "Programming Language :: Python :: 3.13",
+-    "Programming Language :: Python :: 3.14",
+     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+     "Topic :: Internet :: WWW/HTTP",
+ ]

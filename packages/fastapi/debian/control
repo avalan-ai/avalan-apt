@@ -1,0 +1,32 @@
+Source: fastapi
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-pdm-backend,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://fastapi.tiangolo.com/
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-fastapi
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: modern, fast (high-performance) web framework (Avalan PPA pin)
+ FastAPI is a Python web framework for building HTTP and WebSocket
+ APIs on top of Starlette and Pydantic. Avalan ships it in its
+ `server` extras at `>= 0.136.1, < 0.137`; Debian sid carries
+ 0.135.3 (below floor), so the rebuild lands at the pinned 0.136.1.
+ .
+ Runtime deps (starlette >= 0.46, pydantic >= 2.9, typing-extensions
+ >= 4.8, typing-inspection >= 0.4.2, annotated-doc >= 0.0.2) come
+ from a mix of Noble's archive (typing-extensions) and the Avalan
+ PPA (starlette, pydantic, typing-inspection, annotated-doc).

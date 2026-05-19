@@ -1,0 +1,11 @@
+# Upstream does not ship a man page for the `fastapi` CLI;
+# `fastapi --help` covers usage. A derived man page would drift
+# from upstream on every version bump.
+python3-fastapi: no-manual-page [usr/bin/fastapi]
+
+# Upstream ships a `.agents/` directory inside the Python package
+# with skill metadata for AI assistants (Skill .md files). The leading
+# dot triggers lintian's python-dot-directory warning, but the files
+# are deliberate upstream payload and removing them would alter the
+# package contents.
+python3-fastapi: package-contains-python-dot-directory [usr/lib/python3/dist-packages/fastapi/.agents/*]
