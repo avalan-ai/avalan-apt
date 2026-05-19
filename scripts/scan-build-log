@@ -1,0 +1,11 @@
+#!/bin/sh
+# scripts/scan-build-log -- POSIX shim around scripts/scan_build_log.py.
+#
+# Reads a captured build log (path or stdin) and exits non-zero if any
+# forbidden network call (pip install, easy_install, direct PyPI
+# fetch, ...) appears. Used by CI to enforce hermetic builds.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/scan_build_log.py" "$@"

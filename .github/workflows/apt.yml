@@ -69,10 +69,16 @@ jobs:
             python3-pytest \
             wget
 
+      - name: Prepare upstream sdist
+        run: scripts/prepare-source
+
       - name: Source build (Avalan)
         run: |
-          scripts/prepare-source
-          scripts/build-source
+          set -o pipefail
+          scripts/build-source 2>&1 | tee build/build.log
+
+      - name: Scan build log for forbidden network calls
+        run: scripts/scan-build-log build/build.log
 
       - name: Lintian (pedantic, fail on warnings)
         run: scripts/lint-package
@@ -150,10 +156,24 @@ jobs:
             xz-utils \
             zlib1g-dev
 
+      - name: Prepare ${{ matrix.dep }} source
+        env:
+          DEP: ${{ matrix.dep }}
+        run: scripts/prepare-dep-source "$DEP"
+
       - name: Build ${{ matrix.dep }} binary .deb
         env:
           DEP: ${{ matrix.dep }}
-        run: scripts/build-dep-package "$DEP" --mode binary
+        run: |
+          set -o pipefail
+          mkdir -p build/deps
+          scripts/build-dep-package "$DEP" --mode binary 2>&1 \
+            | tee "build/deps/${DEP}-build.log"
+
+      - name: Scan build log for forbidden network calls
+        env:
+          DEP: ${{ matrix.dep }}
+        run: scripts/scan-build-log "build/deps/${DEP}-build.log"
 
       - name: Lintian the .changes
         env:
