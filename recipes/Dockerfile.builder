@@ -55,6 +55,7 @@ RUN apt-get update \
         python3-pdm-backend \
         python3-pip \
         python3-poetry-core \
+        python3-poetry-dynamic-versioning \
         python3-pretend \
         python3-pygments \
         python3-pytest \

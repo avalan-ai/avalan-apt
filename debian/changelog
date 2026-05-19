@@ -1,3 +1,13 @@
+avalan (1.4.9-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * New upstream release (1.4.9).
+  * Drop a2a-sdk and litellm from Depends; upstream moved them out of
+    the default profile into new opt-in extras (a2a, litellm) which
+    the .deb does not ship.
+  * No other dependency constraints changed in the default profile.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 17:00:00 -0300
+
 avalan (1.4.8-0ubuntu1~ppa1~noble1) noble; urgency=medium
 
   * New upstream release (1.4.8).

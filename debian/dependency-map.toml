@@ -12,14 +12,18 @@
 # against `apt-cache madison` and the configured PPA index.
 
 [meta]
-upstream_version = "1.4.8"
+upstream_version = "1.4.9"
 # Commit in homebrew-avalan that introduced the upstream pin this map
 # matches. CI's parity check re-derives extras + constraints from the
-# formula at this sha and compares against this inventory. The 1.4.8
-# upstream loosens many constraints (and drops several deps out of the
-# default profile); the Homebrew formula has not yet been bumped, so
-# this still points at the 1.4.7 commit. The EXTRAS list is unchanged
-# between the two releases, so the parity check stays meaningful.
+# formula at this sha and compares against this inventory. The 1.4.9
+# upstream introduces two new opt-in extras (`a2a`, `litellm`) that
+# move a2a-sdk and litellm out of the default profile; the Homebrew
+# formula has not yet been bumped, so this still points at the 1.4.7
+# commit. The formula's EXTRAS list (agent/server/tool/vendors) is
+# unchanged between 1.4.7, 1.4.8, and 1.4.9, so the parity check
+# stays meaningful — the new `a2a` / `litellm` extras live in
+# pyproject only and are correctly omitted from the formula's
+# default profile.
 homebrew_formula_sha = "d3802930b44c2aad088c14fddb2fc5b12e880076"
 
 # --- Base (always installed by upstream) ------------------------------------
@@ -70,18 +74,6 @@ min_version = "3.1.6"
 notes = "Noble ships 3.1.2 (below floor); rebuild sid 3.1.6-2 into the PPA."
 
 # --- Extra `server` ---------------------------------------------------------
-
-[[dep]]
-pypi_name = "a2a-sdk"
-constraint = ">=0.3.6,<0.4.0"
-debian_name = "python3-a2a-sdk"
-extra = "server"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/be/97/a6840e01795b182ce751ca165430d46459927cde9bfab838087cbb24aef7/a2a_sdk-0.3.26.tar.gz"
-sdist_sha256 = "44068e2d037afbb07ab899267439e9bc7eaa7ac2af94f1e8b239933c993ad52d"
-min_version = "0.3.6"
-notes = "Not in Debian; pin 0.3.26 sdist. PyPI-name override applies."
 
 [[dep]]
 pypi_name = "fastapi"
@@ -297,18 +289,6 @@ sdist_url = "https://files.pythonhosted.org/packages/9d/59/3ed61240ef20b3ae6ed54
 sdist_sha256 = "56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf"
 min_version = "1.28.0"
 notes = "Not in Debian; pin 1.75.0 sdist. PyPI-name override applies."
-
-[[dep]]
-pypi_name = "litellm"
-constraint = ">=1.75.0,<2.0.0"
-debian_name = "python3-litellm"
-extra = "vendors"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/3b/d5/3c9b560db2ffa9e498655d0dfd74f408bc5b32ede858b5731c2a5fa4c752/litellm-1.85.0.tar.gz"
-sdist_sha256 = "babdd569809af913d08a08a7eb55df1ed3e6a3960ee365c6cef4ad031c9bc72a"
-min_version = "1.75.0"
-notes = "Not in Debian; pin 1.85.0 sdist."
 
 [[dep]]
 pypi_name = "openai"

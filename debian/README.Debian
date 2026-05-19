@@ -12,9 +12,11 @@ Out-of-scope extras
 The .deb ships the upstream `agent`, `server`, `tool`, and `vendors`
 extras. The following upstream extras are not in the .deb:
 
+  * `a2a`           — Google's Agent2Agent SDK
   * `browser`       — Playwright (web automation / scraping)
   * `code`          — RestrictedPython sandbox
   * `youtube`       — youtube-transcript-api
+  * `litellm`       — LiteLLM multi-provider router
   * `local`         — torch + transformers + huggingface-hub
   * `vision`        — diffusers + opencv + torchvision
   * `audio`         — soundfile + torchaudio

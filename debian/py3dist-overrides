@@ -6,4 +6,3 @@
 # during the first dry-run build (Slice 4.1 / Slice 4.2).
 pillow python3-pil
 google-genai python3-google-genai
-a2a-sdk python3-a2a-sdk
