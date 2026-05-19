@@ -86,7 +86,9 @@ jobs:
       # we hand-package (hatchling+hatch-vcs, poetry-core,
       # setuptools+setuptools_scm, setuptools_scm with a quilt
       # relax, setuptools+drop-rust-extension, setuptools with C
-      # codec headers, and the GitHub-source + driver-skip path).
+      # codec headers, and the GitHub-source + driver-skip path),
+      # plus one debian-rebuild row so the dpkg-source + dch retarget
+      # path stays exercised.
       matrix:
         dep:
           - humanize
@@ -96,6 +98,7 @@ jobs:
           - huggingface-hub
           - pillow
           - playwright
+          - packaging
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
@@ -132,7 +135,9 @@ jobs:
             python3-packaging \
             python3-pdm-backend \
             python3-poetry-core \
+            python3-pretend \
             python3-pygments \
+            python3-pytest \
             python3-setuptools \
             python3-setuptools-scm \
             python3-sphinx \
@@ -147,10 +152,12 @@ jobs:
         run: scripts/build-dep-package "$DEP" --mode binary
 
       - name: Lintian the .changes
-        env:
-          DEP: ${{ matrix.dep }}
         run: |
           set -e
-          changes=$(ls -1 "build/deps/${DEP}"_*_*.changes | grep -v _source.changes | head -n1)
+          # PyPI name and Debian source name differ for some rows
+          # (e.g. `packaging` -> `python-packaging`); each cell builds
+          # exactly one source, so the binary .changes is the sole
+          # non-_source.changes file under build/deps/.
+          changes=$(ls -1 build/deps/*_*_*.changes | grep -v _source.changes | head -n1)
           test -n "$changes"
           lintian --pedantic --info --fail-on error,warning "$changes"
