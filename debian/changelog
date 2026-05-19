@@ -1,3 +1,18 @@
+avalan (1.4.8-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * New upstream release (1.4.8).
+  * Drop pandas, playwright, RestrictedPython, youtube-transcript-api
+    and tiktoken from Depends; upstream moved them out of the default
+    profile into opt-in extras (browser, code, youtube) which the .deb
+    does not ship.
+  * Source packaging, rich, fastapi, uvicorn, aiomysql, asyncpg,
+    matplotlib, sqlglot, sympy and pillow from Noble after the upstream
+    constraint relaxations (no PPA rebuild required for these).
+  * Relax versioned Depends to match the new upstream floors
+    (pydantic >= 2.0, fastapi >= 0.101.0, uvicorn >= 0.27.0, etc.).
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Tue, 19 May 2026 15:24:18 -0300
+
 avalan (1.4.7-0ubuntu1~ppa1~noble1) noble; urgency=medium
 
   * Initial Debian packaging.

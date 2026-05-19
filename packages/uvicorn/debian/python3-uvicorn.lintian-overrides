@@ -1,4 +1,0 @@
-# Upstream does not ship a man page for the `uvicorn` CLI; `uvicorn
-# --help` covers the usage. Writing a derived man page would drift
-# from upstream on every version bump.
-python3-uvicorn: no-manual-page [usr/bin/uvicorn]

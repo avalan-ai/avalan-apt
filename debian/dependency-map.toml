@@ -12,26 +12,26 @@
 # against `apt-cache madison` and the configured PPA index.
 
 [meta]
-upstream_version = "1.4.7"
+upstream_version = "1.4.8"
 # Commit in homebrew-avalan that introduced the upstream pin this map
 # matches. CI's parity check re-derives extras + constraints from the
-# formula at this sha and compares against this inventory.
+# formula at this sha and compares against this inventory. The 1.4.8
+# upstream loosens many constraints (and drops several deps out of the
+# default profile); the Homebrew formula has not yet been bumped, so
+# this still points at the 1.4.7 commit. The EXTRAS list is unchanged
+# between the two releases, so the parity check stays meaningful.
 homebrew_formula_sha = "d3802930b44c2aad088c14fddb2fc5b12e880076"
 
 # --- Base (always installed by upstream) ------------------------------------
 
 [[dep]]
 pypi_name = "packaging"
-constraint = ">=25.0,<26.0"
+constraint = ">=24.0,<27.0"
 debian_name = "python3-packaging"
 extra = "base"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "python-packaging"
-debian_suite = "bookworm-backports"
-debian_version = "25.0-1~bpo12+1"
-min_version = "25.0"
-notes = "Noble ships 24.0 (below floor); rebuild bookworm-backports 25.0-1~bpo12+1 into the PPA. Debian sid is 26.0 (above ceiling)."
+source = "noble"
+min_version = "24.0"
+notes = "Noble ships 24.0-1, exactly the new floor. 1.4.8 widened the ceiling to <27.0 so the rebuild we used to need is no longer required."
 
 [[dep]]
 pypi_name = "humanize"
@@ -47,15 +47,12 @@ notes = "Noble ships 4.9.0 and Debian sid ships 4.12.1 (both below floor); pin 4
 
 [[dep]]
 pypi_name = "rich"
-constraint = ">=14.1.0,<15.0.0"
+constraint = ">=13.7.0,<16.0.0"
 debian_name = "python3-rich"
 extra = "base"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/e9/67/cae617f1351490c25a4b8ac3b8b63a4dda609295d8222bad12242dfdc629/rich-14.3.4.tar.gz"
-sdist_sha256 = "817e02727f2b25b40ef56f5aa2217f400c8489f79ca8f46ea2b70dd5e14558a9"
-min_version = "14.1.0"
-notes = "Debian sid carries rich 15.x (above ceiling); pin 14.3.4 sdist."
+source = "noble"
+min_version = "13.7.0"
+notes = "Noble ships 13.7.1-1, exactly inside the widened 1.4.8 range (>=13.7.0,<16.0.0)."
 
 # --- Extra `agent` ----------------------------------------------------------
 
@@ -88,59 +85,12 @@ notes = "Not in Debian; pin 0.3.26 sdist. PyPI-name override applies."
 
 [[dep]]
 pypi_name = "fastapi"
-constraint = ">=0.136.1,<0.137.0"
+constraint = ">=0.101.0,<1.0.0"
 debian_name = "python3-fastapi"
 extra = "server"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/5d/45/c130091c2dfa061bbfe3150f2a5091ef1adf149f2a8d2ae769ecaf6e99a2/fastapi-0.136.1.tar.gz"
-sdist_sha256 = "7af665ad7acfa0a3baf8983d393b6b471b9da10ede59c60045f49fbc89a0fa7f"
-min_version = "0.136.1"
-notes = "Debian sid carries 0.135.3 (below floor); pin 0.136.1 sdist."
-
-# Transitive of fastapi -- fastapi requires starlette >= 0.46.0; Noble
-# ships starlette 0.36.x (below floor).
-[[dep]]
-pypi_name = "starlette"
-constraint = ">=0.46.0"
-debian_name = "python3-starlette"
-extra = "server"
-transitive_of = "fastapi"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/81/69/17425771797c36cded50b7fe44e850315d039f28b15901ab44839e70b593/starlette-1.0.0.tar.gz"
-sdist_sha256 = "6a4beaf1f81bb472fd19ea9b918b50dc3a77a6f2e190a12954b25e6ed5eea149"
-min_version = "0.46.0"
-notes = "Transitive runtime dep of fastapi. Pin latest 1.x; runtime deps (anyio, typing-extensions) are in Noble."
-
-# Transitive of fastapi -- not in Debian (new pydantic-ecosystem helper).
-[[dep]]
-pypi_name = "typing-inspection"
-constraint = ">=0.4.2"
-debian_name = "python3-typing-inspection"
-extra = "server"
-transitive_of = "fastapi"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz"
-sdist_sha256 = "ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"
-min_version = "0.4.2"
-notes = "Transitive runtime dep of fastapi (and pydantic). Not in Debian; pin 0.4.2 sdist. typing-extensions from Noble satisfies its sole runtime dep."
-
-# Transitive of fastapi -- not in Debian (small pure-Python helper for
-# Annotated[] doc strings).
-[[dep]]
-pypi_name = "annotated-doc"
-constraint = ">=0.0.2"
-debian_name = "python3-annotated-doc"
-extra = "server"
-transitive_of = "fastapi"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/57/ba/046ceea27344560984e26a590f90bc7f4a75b06701f653222458922b558c/annotated_doc-0.0.4.tar.gz"
-sdist_sha256 = "fbcda96e87e9c92ad167c2e53839e57503ecfda18804ea28102353485033faa4"
-min_version = "0.0.2"
-notes = "Transitive runtime dep of fastapi. Not in Debian; pin 0.0.4 sdist. Zero runtime deps."
+source = "noble"
+min_version = "0.101.0"
+notes = "Noble ships 0.101.0-3, exactly the new floor. 1.4.8 widened the ceiling from <0.137.0 to <1.0.0 so the rebuild we used to need is no longer required; Noble's starlette 0.31.x satisfies fastapi 0.101's transitive bound on its own."
 
 [[dep]]
 pypi_name = "mcp"
@@ -187,7 +137,7 @@ notes = "Transitive runtime dep of mcp (anyio >= 4.5; Noble ships 4.2.0). Flippe
 
 [[dep]]
 pypi_name = "pydantic"
-constraint = ">=2.11.7,<3.0.0"
+constraint = ">=2.0,<3.0.0"
 debian_name = "python3-pydantic"
 extra = "server"
 source = "ppa"
@@ -195,98 +145,61 @@ provenance = "debian-rebuild"
 debian_source_pkg = "pydantic"
 debian_suite = "sid"
 debian_version = "2.13.3-1"
-min_version = "2.11.7"
-notes = "Noble ships pydantic 1.x; rebuild sid 2.13.3-1 into the PPA."
+min_version = "2.0"
+notes = "Noble ships pydantic 1.x (below floor even after 1.4.8 relaxed the constraint to >=2.0); rebuild sid 2.13.3-1 into the PPA."
+
+# Transitive of pydantic -- pydantic 2.x requires typing-inspection
+# (>=0.4.2 in 2.13.x); not in Noble at all.
+[[dep]]
+pypi_name = "typing-inspection"
+constraint = ">=0.4.2"
+debian_name = "python3-typing-inspection"
+extra = "server"
+transitive_of = "pydantic"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz"
+sdist_sha256 = "ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"
+min_version = "0.4.2"
+notes = "Transitive runtime dep of pydantic 2.x. Not in Debian; pin 0.4.2 sdist. typing-extensions from Noble satisfies its sole runtime dep."
 
 [[dep]]
 pypi_name = "uvicorn"
-constraint = ">=0.35.0,<0.36.0"
+constraint = ">=0.27.0,<1.0.0"
 debian_name = "python3-uvicorn"
 extra = "server"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/5e/42/e0e305207bb88c6b8d3061399c6a961ffe5fbb7e2aa63c9234df7259e9cd/uvicorn-0.35.0.tar.gz"
-sdist_sha256 = "bc662f087f7cf2ce11a1d7fd70b90c9f98ef2e2831556dd078d131b96cc94a01"
-min_version = "0.35.0"
-notes = "Debian sid carries 0.38.0 (above ceiling); pin 0.35.0 sdist."
+source = "noble"
+min_version = "0.27.0"
+notes = "Noble ships 0.27.1-1, just above the new floor. 1.4.8 widened the ceiling from <0.36.0 to <1.0.0 so the rebuild we used to need is no longer required."
 
 # --- Extra `tool` -----------------------------------------------------------
 
 [[dep]]
 pypi_name = "aiomysql"
-constraint = ">=0.2.0,<0.3.0"
+constraint = ">=0.1.1,<0.4.0"
 debian_name = "python3-aiomysql"
 extra = "tool"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/67/76/2c5b55e4406a1957ffdfd933a94c2517455291c97d2b81cec6813754791a/aiomysql-0.2.0.tar.gz"
-sdist_sha256 = "558b9c26d580d08b8c5fd1be23c5231ce3aeff2dadad989540fee740253deb67"
-min_version = "0.2.0"
-notes = "Noble ships 0.1.1 (below floor); Debian sid ships 0.3.2 (above ceiling). Pin 0.2.0 sdist."
+source = "noble"
+min_version = "0.1.1"
+notes = "Noble ships 0.1.1-2, exactly the new floor. 1.4.8 dropped the floor from 0.2.0 to 0.1.1 so Noble's package now suffices."
 
 [[dep]]
 pypi_name = "asyncpg"
-constraint = ">=0.30.0,<0.31.0"
+constraint = ">=0.29.0,<0.32.0"
 debian_name = "python3-asyncpg"
 extra = "tool"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "asyncpg"
-debian_suite = "sid"
-debian_version = "0.30.0-1.1"
-min_version = "0.30.0"
-notes = "Noble ships 0.29.0 (below floor); rebuild sid 0.30.0-1.1 into the PPA."
+source = "noble"
+min_version = "0.29.0"
+notes = "Noble ships 0.29.0-1build1, exactly the new floor. 1.4.8 dropped the floor from 0.30.0 to 0.29.0 so Noble's package now suffices."
 
 [[dep]]
 pypi_name = "matplotlib"
-constraint = ">=3.8.0,<4.0.0"
+constraint = ">=3.6.0,<4.0.0"
 debian_name = "python3-matplotlib"
 extra = "tool"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "matplotlib"
-debian_suite = "sid"
-debian_version = "3.10.7+dfsg1-4"
-min_version = "3.8.0"
-notes = "Noble ships 3.6.3 (below floor); rebuild sid 3.10.7+dfsg1-4 into the PPA."
-
-[[dep]]
-pypi_name = "pandas"
-constraint = ">=2.3.1,<3.0.0"
-debian_name = "python3-pandas"
-extra = "tool"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "pandas"
-debian_suite = "sid"
-debian_version = "2.3.3+dfsg-3"
-min_version = "2.3.1"
-notes = "Noble's pandas predates 2.3.x; rebuild sid 2.3.3+dfsg-3 into the PPA."
-
-[[dep]]
-pypi_name = "playwright"
-constraint = ">=1.54.0,<2.0.0"
-debian_name = "python3-playwright"
-extra = "tool"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://github.com/microsoft/playwright-python/archive/refs/tags/v1.55.0.tar.gz"
-sdist_sha256 = "adda41b4a6c02f414d535b7a0e03bc5f4c4f77fb3d4ef3028f8b609ca71f3613"
-min_version = "1.54.0"
-notes = "PyPI ships wheels-only (bundled browser drivers per platform); rebuild from the upstream GitHub source archive at v1.55.0 instead. Browsers intentionally excluded -- callers install chromium/firefox separately. Flipped from debian-rebuild because Debian sid's source carries the PEP 639 license-string form that Noble's setuptools rejects, and per APT.md we do not patch debian-rebuild rows."
-
-[[dep]]
-pypi_name = "RestrictedPython"
-constraint = ">=8.0,<9.0.0"
-debian_name = "python3-restrictedpython"
-extra = "tool"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "restrictedpython"
-debian_suite = "sid"
-debian_version = "8.1-1"
-min_version = "8.0"
-notes = "Rebuild sid 8.1-1 into the PPA. PyPI-name override applies."
+source = "noble"
+min_version = "3.6.0"
+notes = "Noble ships 3.6.3-1ubuntu5, above the new floor. 1.4.8 dropped the floor from 3.8.0 to 3.6.0 so Noble's package now suffices."
 
 [[dep]]
 pypi_name = "SQLAlchemy"
@@ -303,40 +216,21 @@ notes = "Noble ships 1.4.50 (below floor); rebuild sid 2.0.48+ds1-1 into the PPA
 
 [[dep]]
 pypi_name = "sqlglot"
-constraint = ">=27.20.0,<28.0.0"
+constraint = ">=22.0,<31.0.0"
 debian_name = "python3-sqlglot"
 extra = "tool"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/d1/50/766692a83468adb1bde9e09ea524a01719912f6bc4fdb47ec18368320f6e/sqlglot-27.29.0.tar.gz"
-sdist_sha256 = "2270899694663acef94fa93497971837e6fadd712f4a98b32aee1e980bc82722"
-min_version = "27.20.0"
-notes = "Debian sid carries 30.8.0 (above ceiling); pin 27.29.0 sdist."
+source = "noble"
+min_version = "22.0"
+notes = "Noble ships 22.2.0-1, above the new floor. 1.4.8 dropped the floor from 27.20.0 to 22.0 so Noble's package now suffices."
 
 [[dep]]
 pypi_name = "sympy"
-constraint = ">=1.14.0,<2.0.0"
+constraint = ">=1.12,<2.0.0"
 debian_name = "python3-sympy"
 extra = "tool"
-source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "sympy"
-debian_suite = "sid"
-debian_version = "1.14.0-3"
-min_version = "1.14.0"
-notes = "Noble ships 1.12 (below floor); rebuild sid 1.14.0-3 into the PPA."
-
-[[dep]]
-pypi_name = "youtube-transcript-api"
-constraint = ">=1.2.2,<2.0.0"
-debian_name = "python3-youtube-transcript-api"
-extra = "tool"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/60/43/4104185a2eaa839daa693b30e15c37e7e58795e8e09ec414f22b3db54bec/youtube_transcript_api-1.2.4.tar.gz"
-sdist_sha256 = "b72d0e96a335df599d67cee51d49e143cff4f45b84bcafc202ff51291603ddcd"
-min_version = "1.2.2"
-notes = "Not in Debian; pin 1.2.4 sdist. PyPI-name override applies."
+source = "noble"
+min_version = "1.12"
+notes = "Noble ships 1.12-7, exactly the new floor. 1.4.8 dropped the floor from 1.14.0 to 1.12 so Noble's package now suffices."
 
 # --- Extra `vendors` --------------------------------------------------------
 
@@ -431,24 +325,9 @@ notes = "Noble's openai predates 2.x; rebuild sid 2.21.0-1 into the PPA."
 
 [[dep]]
 pypi_name = "pillow"
-constraint = ">=11.3.0,<12.0.0"
+constraint = ">=10.0,<13.0"
 debian_name = "python3-pil"
 extra = "vendors"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/f3/0d/d0d6dea55cd152ce3d6767bb38a8fc10e33796ba4ba210cbab9354b6d238/pillow-11.3.0.tar.gz"
-sdist_sha256 = "3828ee7586cd0b2091b6209e5ad53e20d0649bbe87164a459d0676e035e8f523"
-min_version = "11.3.0"
-notes = "Noble ships 10.2.0 (below floor); Debian sid ships 12.2.0 (above ceiling). Pin 11.3.0 sdist. PyPI name maps to python3-pil."
-
-[[dep]]
-pypi_name = "tiktoken"
-constraint = ">=0.13.0,<0.14.0"
-debian_name = "python3-tiktoken"
-extra = "vendors"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/e4/e5/5f3cb2159769d0f4324c0e9e87f9de3c4b1cd45848a96b2eb3566ad5ca77/tiktoken-0.13.0.tar.gz"
-sdist_sha256 = "c9435714c3a84c2319499de9a300c0e604449dd0799ff246458b3bb6a7f433c1"
-min_version = "0.13.0"
-notes = "Debian sid carries 0.12.0 (below floor); pin 0.13.0 sdist."
+source = "noble"
+min_version = "10.0"
+notes = "Noble ships 10.2.0-1ubuntu1, above the new floor. 1.4.8 widened the range from >=11.3.0,<12.0.0 to >=10.0,<13.0 so Noble's package now suffices. PyPI name maps to python3-pil."

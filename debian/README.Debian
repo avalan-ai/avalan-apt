@@ -6,12 +6,41 @@ command-line tools without pulling in heavyweight or
 hardware-specific dependencies. A few features need extra setup,
 described below.
 
+Out-of-scope extras
+-------------------
+
+The .deb ships the upstream `agent`, `server`, `tool`, and `vendors`
+extras. The following upstream extras are not in the .deb:
+
+  * `browser`       — Playwright (web automation / scraping)
+  * `code`          — RestrictedPython sandbox
+  * `youtube`       — youtube-transcript-api
+  * `local`         — torch + transformers + huggingface-hub
+  * `vision`        — diffusers + opencv + torchvision
+  * `audio`         — soundfile + torchaudio
+  * `memory`        — vector stores + tree-sitter + pdf tooling
+  * `mlx` / `apple` — Apple-silicon MLX runtime
+  * `nvidia` / `vllm` / `quantization`
+                    — CUDA + vLLM + bitsandbytes
+  * `ds4`           — DualShock 4 input
+  * `secrets`       — boto3 + keyring
+  * `translation`   — protobuf + sentencepiece
+
+To use any of them, create a virtualenv and install with pip on top
+of the system Avalan install:
+
+    python3 -m venv ~/.avalan/venv
+    source ~/.avalan/venv/bin/activate
+    pip install "avalan[browser]"      # or [code], [youtube], [local], ...
+
+The system `avalan` and `avl` keep working alongside the venv; the
+venv-installed copy shadows them only while activated.
+
 Playwright browsers
 -------------------
 
-Playwright browsers are NOT installed and no browser is pulled as a
-dependency. Browser-using Avalan features (web automation, scraping,
-etc.) will fail until you provide one. Two supported paths:
+If you opt into the `browser` extra above, Playwright itself does not
+bundle a browser. Pick one of:
 
   1. System browser (recommended on shared hosts):
 
@@ -26,23 +55,7 @@ etc.) will fail until you provide one. Two supported paths:
 
      binaries land under `~/.cache/ms-playwright/`.
 
-Either way, the .deb stays small and `apt install avalan` never
-downloads a browser in the background.
-
-Heavyweight extras
-------------------
-
-Features that depend on GPU/Apple/CUDA stacks, large model bundles,
-or hardware-specific libraries are not in the .deb. The upstream
-extras that are out of scope: local, vision, audio, memory, mlx,
-apple, nvidia, vllm, quantization, ds4, secrets, translation.
-
-To use them, create a virtualenv and install with pip on top of the
-system Avalan install:
-
-    python3 -m venv ~/.avalan/venv
-    source ~/.avalan/venv/bin/activate
-    pip install "avalan[local]"        # or [vision], [audio], ...
+The .deb itself never fetches a browser; this step is opt-in.
 
 API keys
 --------

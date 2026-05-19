@@ -5,6 +5,6 @@
 
 [upstream]
 name = "avalan"
-version = "1.4.7"
-sdist_url = "https://files.pythonhosted.org/packages/3a/38/310fe6476cf52c27c7f3459dbb62ef9b101911bdf2f9eb93c69bbbc498f6/avalan-1.4.7.tar.gz"
-sha256 = "0f12d0786ace337c665e2ed8482ec3f6d30c79f583d135474f02b4670ff8fcd4"
+version = "1.4.8"
+sdist_url = "https://files.pythonhosted.org/packages/36/4d/3e3bf47673af2bd11c6fcf4d4276dbff0025f0b64f70a013a31b51e8d0c0/avalan-1.4.8.tar.gz"
+sha256 = "f036af038026917cc871d7e3c09bfc2343b658fa718293cb13c0a3a98a115067"

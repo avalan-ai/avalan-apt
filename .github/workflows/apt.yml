@@ -82,27 +82,22 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      # One cell per representative dep: covers each build backend
-      # we hand-package (hatchling+hatch-vcs, poetry-core,
-      # setuptools+setuptools_scm, setuptools_scm with a quilt
-      # relax, setuptools+drop-rust-extension, setuptools with C
-      # codec headers, and the GitHub-source + driver-skip path),
-      # plus two debian-rebuild rows so the dpkg-source + dch
-      # retarget path stays exercised (packaging) and the
-      # upstream-warning-tolerant lintian path stays exercised
-      # (jinja2 — sid omits Priority on its binary packages).
+      # One cell per representative dep, covering the build backends
+      # still in play after 1.4.8 trimmed the default profile:
+      # setuptools (humanize) and setuptools+drop-rust-extension
+      # (huggingface-hub) for pypi-sdist rows, plus jinja2 as the
+      # debian-rebuild row whose upstream lintian profile diverges
+      # from Noble's (sid omits Priority on its binary packages).
+      # 1.4.8 dropped pandas/playwright/RestrictedPython/
+      # youtube-transcript-api/tiktoken from the default profile and
+      # relaxed enough ceilings that packaging/rich/fastapi/uvicorn/
+      # aiomysql/asyncpg/matplotlib/sqlglot/sympy/pillow now resolve
+      # from Noble, so their overlays and matrix cells are gone.
       matrix:
         dep:
           - humanize
-          - rich
-          - sqlglot
-          - aiomysql
           - huggingface-hub
-          - pillow
-          - playwright
-          - packaging
           - jinja2
-          - RestrictedPython
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4

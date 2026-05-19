@@ -1,4 +1,0 @@
-# Upstream does not ship a man page for the `playwright` CLI;
-# `playwright --help` covers usage. Writing a derived man page would
-# drift from upstream on every version bump.
-python3-playwright: no-manual-page [usr/bin/playwright]

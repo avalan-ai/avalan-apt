@@ -1,4 +1,0 @@
-# Noble ships lintian 2.117 which only validates up to Standards-Version
-# 4.6.2; we pin to 4.7.2 (the current Policy). Drop this once Noble's
-# lintian learns the newer Policy version.
-newer-standards-version 4.7.2 *
