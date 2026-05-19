@@ -16,7 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04, macos-14, macos-13]
+        # macos-13 dropped: GitHub's Intel macOS hosted runners have
+        # essentially no capacity and jobs sit queued indefinitely.
+        # macos-14 (Apple Silicon) covers the dev-host platform; both
+        # ubuntu LTS cells stay because Noble is the deployment target.
+        os: [ubuntu-24.04, ubuntu-22.04, macos-14]
         python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
