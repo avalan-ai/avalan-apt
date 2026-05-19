@@ -51,6 +51,7 @@ RUN apt-get update \
         python3-markupsafe \
         python3-numpy \
         python3-packaging \
+        python3-pallets-sphinx-themes \
         python3-pdm-backend \
         python3-pip \
         python3-poetry-core \
@@ -60,6 +61,8 @@ RUN apt-get update \
         python3-setuptools \
         python3-setuptools-scm \
         python3-sphinx \
+        python3-sphinx-issues \
+        python3-trio \
         quilt \
         wget \
         xz-utils \
