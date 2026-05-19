@@ -58,6 +58,8 @@ RUN apt-get update \
         python3-pretend \
         python3-pygments \
         python3-pytest \
+        python3-pytest-mock \
+        python3-pytest-runner \
         python3-setuptools \
         python3-setuptools-scm \
         python3-sphinx \
