@@ -1,0 +1,56 @@
+#!/bin/sh
+# debian/tests/smoke -- autopkgtest entry point.
+#
+# Runs against the installed Avalan binary package on a Noble host
+# with the Avalan PPA enabled. Verifies the install actually
+# produced a usable CLI + the documented top-level imports, without
+# touching the network, downloading models, or driving a browser.
+#
+# The expected upstream version is templated from debian/changelog
+# at test time (`dpkg-parsechangelog -SVersion`) and the Debian
+# revision suffix stripped, so a release bump does not require
+# editing this script.
+
+set -eu
+
+# autopkgtest unpacks the source tree and runs us from inside it, so
+# debian/changelog is reachable. Read the upstream version (the part
+# before the first `-`) and require the installed avalan to report
+# the same value.
+deb_version=$(dpkg-parsechangelog --show-field Version)
+upstream_version=${deb_version%%-*}
+echo "smoke: expected upstream version=${upstream_version}"
+
+# Both console scripts must land on PATH and respond to --version.
+for cli in avalan avl; do
+    binary=$(command -v "$cli")
+    echo "smoke: ${cli} -> ${binary}"
+    reported=$("$cli" --version)
+    case "$reported" in
+        *"$upstream_version"*) ;;
+        *)
+            echo "smoke: FAIL -- ${cli} --version reported '${reported}', expected to contain '${upstream_version}'" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# avalan --help should run without an import error or a missing
+# extra; tail the output to stderr for autopkgtest log triage.
+avalan --help >/dev/null
+
+# Top-level import must succeed.
+python3 -c 'import avalan; print(f"smoke: import avalan ok ({avalan.__file__})")'
+
+# CLI entry point must resolve in-process too (some import errors
+# only surface when main() runs).
+python3 -c 'from avalan.cli.__main__ import main; print("smoke: cli entry point ok")'
+
+# Every default-profile extra must import. Names mirror the upstream
+# pyproject's [project.optional-dependencies] entries that Avalan
+# ships in the .deb (agent, server, tool, vendors).
+for extra in agent server tool vendors; do
+    python3 -c "import importlib; importlib.import_module(f'avalan.${extra}'); print(f'smoke: import avalan.${extra} ok')"
+done
+
+echo "smoke: OK"

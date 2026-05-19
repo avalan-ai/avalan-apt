@@ -1,0 +1,8 @@
+# autopkgtest control -- runs against the installed python3 / avalan
+# binary, so `Depends: @` pulls in python3-avalan plus its full
+# `Depends:` set from the dep map. The smoke script itself works
+# offline (no model downloads, no browser) so the `isolation-machine`
+# restriction is not needed.
+Tests: smoke
+Depends: @
+Restrictions: allow-stderr
