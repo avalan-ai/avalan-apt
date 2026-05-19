@@ -76,3 +76,81 @@ jobs:
 
       - name: Lintian (pedantic, fail on warnings)
         run: scripts/lint-package
+
+  dep-build:
+    name: dep-build (${{ matrix.dep }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      # One cell per representative dep: covers each build backend
+      # we hand-package (hatchling+hatch-vcs, poetry-core,
+      # setuptools+setuptools_scm, setuptools_scm with a quilt
+      # relax, setuptools+drop-rust-extension, setuptools with C
+      # codec headers, and the GitHub-source + driver-skip path).
+      matrix:
+        dep:
+          - humanize
+          - rich
+          - sqlglot
+          - aiomysql
+          - huggingface-hub
+          - pillow
+          - playwright
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            debhelper \
+            devscripts \
+            dh-python \
+            dpkg-dev \
+            fakeroot \
+            flit \
+            libfreetype-dev \
+            libjpeg-dev \
+            liblcms2-dev \
+            libopenjp2-7-dev \
+            libtiff-dev \
+            libwebp-dev \
+            lintian \
+            pybuild-plugin-pyproject \
+            python3-all \
+            python3-all-dev \
+            python3-babel \
+            python3-hatch-fancy-pypi-readme \
+            python3-hatch-vcs \
+            python3-hatchling \
+            python3-installer \
+            python3-markupsafe \
+            python3-numpy \
+            python3-packaging \
+            python3-pdm-backend \
+            python3-poetry-core \
+            python3-pygments \
+            python3-setuptools \
+            python3-setuptools-scm \
+            python3-sphinx \
+            quilt \
+            wget \
+            xz-utils \
+            zlib1g-dev
+
+      - name: Build ${{ matrix.dep }} binary .deb
+        env:
+          DEP: ${{ matrix.dep }}
+        run: scripts/build-dep-package "$DEP" --mode binary
+
+      - name: Lintian the .changes
+        env:
+          DEP: ${{ matrix.dep }}
+        run: |
+          set -e
+          changes=$(ls -1 "build/deps/${DEP}"_*_*.changes | grep -v _source.changes | head -n1)
+          test -n "$changes"
+          lintian --pedantic --info --fail-on error,warning "$changes"
