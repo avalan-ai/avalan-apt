@@ -1,0 +1,32 @@
+#!/bin/sh
+# scripts/build-binary -- thin wrapper around `dpkg-buildpackage -b -us -uc`
+# against the prepared Avalan source tree under build/.
+#
+# Same shape as scripts/build-source, just `-b` instead of `-S`:
+# produces the per-arch .deb plus its _<arch>.changes / .buildinfo
+# in build/, alongside the source artifacts. Run on a Noble host
+# with the Avalan PPA enabled so apt can resolve the binary
+# Build-Depends; non-Debian dev hosts should reach for
+# scripts/dockerized-build instead.
+
+set -eu
+set -x
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+version=$(python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['version'])")
+src_dir="build/avalan-${version}"
+
+if [ ! -d "$src_dir" ]; then
+    set +x
+    echo "FATAL: $src_dir not found. Run scripts/prepare-source first." >&2
+    exit 1
+fi
+
+(cd "$src_dir" && dpkg-buildpackage -b -us -uc)
+
+if [ -x scripts/lint-package ]; then
+    scripts/lint-package
+fi
