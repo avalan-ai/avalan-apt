@@ -101,6 +101,7 @@ jobs:
       # from Noble, so their overlays and matrix cells are gone.
       matrix:
         dep:
+          - aiobotocore
           - aioitertools
           - boto3
           - botocore

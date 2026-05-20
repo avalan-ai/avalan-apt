@@ -1,0 +1,39 @@
+Source: aiobotocore
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/aio-libs/aiobotocore
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-aiobotocore
+Architecture: all
+Depends:
+ python3-aiohttp (>= 3.9.1),
+ python3-aiohttp (<< 4),
+ python3-aioitertools (>= 0.5.1),
+ python3-botocore (>= 1.40.46),
+ python3-botocore (<< 1.40.62),
+ python3-dateutil (>= 2.1),
+ python3-jmespath (>= 0.7.1),
+ python3-multidict (>= 6.0.0),
+ python3-multidict (<< 7),
+ python3-wrapt (>= 1.10.10),
+ python3-wrapt (<< 2),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Async client for AWS services using botocore and aiohttp (Avalan PPA transitive)
+ aiobotocore wraps botocore so that the AWS service clients can be
+ driven from asyncio code without blocking the event loop. This
+ package is built for the Avalan PPA because aioboto3 15.5.0
+ (Avalan's `vendors` extra) `==`-pins aiobotocore at 2.25.1 and
+ Noble's archive does not carry it.

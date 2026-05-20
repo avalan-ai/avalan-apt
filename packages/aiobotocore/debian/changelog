@@ -1,0 +1,19 @@
+aiobotocore (2.25.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of aiobotocore 2.25.1 for the Avalan PPA.
+  * Transitive runtime dep of aioboto3 15.5.0 (Avalan's `vendors`
+    extra). aioboto3 `==`-pins this exact version; not in Debian.
+    Pinned from the upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-for-noble) that softens four
+    pyproject metadata entries Noble's archive cannot satisfy as
+    written: relax the `setuptools >= 77.0.0` build-system pin to
+    plain `setuptools`, rewrite the PEP 639 SPDX
+    `license = "Apache-2.0"` string to the legacy
+    `license = { file = "LICENSE" }` table form, drop the
+    `Programming Language :: Python :: 3.14` trove classifier
+    unknown to Noble's setuptools, and soften the runtime
+    `aiohttp >= 3.9.2` floor to `>= 3.9.1` so Noble's archived
+    aiohttp 3.9.1-1ubuntu0.1 resolves (the gap between 3.9.1 and
+    3.9.2 is a single security fix that does not change API).
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 11:45:00 -0300
