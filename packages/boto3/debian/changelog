@@ -1,0 +1,12 @@
+boto3 (1.40.61-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of boto3 1.40.61 for the Avalan PPA.
+  * Transitive runtime dep of aiobotocore's [boto3] extra
+    (Avalan's `vendors` extra, reached via aioboto3). Noble ships
+    1.34.46+dfsg and the Debian snapshot pool has no version in
+    aiobotocore's `>= 1.40.46, < 1.40.62` window; pinned from
+    the upstream PyPI sdist at 1.40.61, the top of the window.
+  * No source patches required: upstream's setup.py is the sole
+    build entry point and Noble's setuptools 68 accepts it as-is.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 11:30:00 -0300
