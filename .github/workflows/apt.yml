@@ -108,6 +108,7 @@ jobs:
           - botocore
           - google-auth
           - google-genai
+          - httpx-sse
           - humanize
           - huggingface-hub
           - jinja2
