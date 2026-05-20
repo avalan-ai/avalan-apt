@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=botocore
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need pytest fixtures pinned to dev-only versions
+# and exercise a large model-validation matrix that runs against
+# AWS service JSONs; skip at build time. The Avalan smoke import
+# covers the runtime entry point.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."
