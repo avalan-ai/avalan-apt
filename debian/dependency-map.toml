@@ -238,6 +238,94 @@ sdist_sha256 = "ea8d8787d315594842fbfcf2c4dce3bac2ad61be275bc8584b2ce9a3402a6979
 min_version = "15.0.0"
 notes = "Not in Debian sid; pin 15.5.0 sdist."
 
+# Transitive of aioboto3 -- aioboto3 15.5.0 hard-pins
+# `aiobotocore[boto3]==2.25.1`. aiobotocore in turn pins botocore in a
+# tight `>=1.40.46,<1.40.62` window; Debian's snapshot pool jumps from
+# 1.37.9+repack-1 straight to 1.40.68+repack-1, missing the entire
+# window, so we cannot debian-rebuild the chain. Hand-package
+# aiobotocore + botocore + boto3 + s3transfer + aioitertools from
+# PyPI; Noble carries aiohttp, dateutil, jmespath, multidict, urllib3,
+# wrapt, aiofiles at compatible versions.
+[[dep]]
+pypi_name = "aiobotocore"
+constraint = "==2.25.1"
+debian_name = "python3-aiobotocore"
+extra = "vendors"
+transitive_of = "aioboto3"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/62/94/2e4ec48cf1abb89971cb2612d86f979a6240520f0a659b53a43116d344dc/aiobotocore-2.25.1.tar.gz"
+sdist_sha256 = "ea9be739bfd7ece8864f072ec99bb9ed5c7e78ebb2b0b15f29781fbe02daedbc"
+min_version = "2.25.1"
+notes = "Hard-pinned by aioboto3 15.5.0 (`aiobotocore[boto3]==2.25.1`); not in Debian. The Avalan-side debian/ ships a quilt patch that softens the build-system pin (setuptools >= 77 to plain setuptools), rewrites the PEP 639 SPDX license string back to the legacy `license = { file = ... }` table form, drops the Python 3.14 trove classifier, and relaxes the aiohttp runtime floor from 3.9.2 to 3.9.1 so Noble's archive resolves."
+
+# Transitive of aioboto3 -- aiobotocore 2.25.1 needs botocore in
+# `>=1.40.46,<1.40.62`. Noble ships 1.34.46+repack and the Debian
+# snapshot pool has no version in the window, so we pypi-sdist 1.40.61
+# (the top of the window). botocore's runtime deps (jmespath,
+# python-dateutil, urllib3) are all in Noble at compatible versions.
+[[dep]]
+pypi_name = "botocore"
+constraint = ">=1.40.46,<1.40.62"
+debian_name = "python3-botocore"
+extra = "vendors"
+transitive_of = "aioboto3"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/28/a3/81d3a47c2dbfd76f185d3b894f2ad01a75096c006a2dd91f237dca182188/botocore-1.40.61.tar.gz"
+sdist_sha256 = "a2487ad69b090f9cccd64cf07c7021cd80ee9c0655ad974f87045b02f3ef52cd"
+min_version = "1.40.46"
+notes = "Aiobotocore 2.25.1 ceilings botocore at 1.40.62; Noble ships 1.34.46 and the Debian snapshot pool's nearest higher version is 1.40.68 (above the ceiling). Pin 1.40.61 sdist."
+
+# Transitive of aioboto3 -- boto3 lives next to botocore at the same
+# version cadence. aiobotocore[boto3] 2.25.1 ceilings boto3 at
+# 1.40.62; we pin 1.40.61, matching botocore.
+[[dep]]
+pypi_name = "boto3"
+constraint = ">=1.40.46,<1.40.62"
+debian_name = "python3-boto3"
+extra = "vendors"
+transitive_of = "aioboto3"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/ed/f9/6ef8feb52c3cce5ec3967a535a6114b57ac7949fd166b0f3090c2b06e4e5/boto3-1.40.61.tar.gz"
+sdist_sha256 = "d6c56277251adf6c2bdd25249feae625abe4966831676689ff23b4694dea5b12"
+min_version = "1.40.46"
+notes = "Aiobotocore 2.25.1's [boto3] extra ceilings boto3 at 1.40.62; matches botocore. Pin 1.40.61 sdist."
+
+# Transitive of aioboto3 (via boto3) -- boto3 1.40.61 requires
+# s3transfer in `>=0.14.0,<0.15.0`; Noble ships 0.10.1, below the
+# floor. Pin 0.14.0 (the only 0.14.x release as of this audit);
+# botocore is its sole runtime dep.
+[[dep]]
+pypi_name = "s3transfer"
+constraint = ">=0.14.0,<0.15.0"
+debian_name = "python3-s3transfer"
+extra = "vendors"
+transitive_of = "aioboto3"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/62/74/8d69dcb7a9efe8baa2046891735e5dfe433ad558ae23d9e3c14c633d1d58/s3transfer-0.14.0.tar.gz"
+sdist_sha256 = "eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125"
+min_version = "0.14.0"
+notes = "Transitive of boto3 1.40.61 (s3transfer >=0.14.0,<0.15.0). Noble ships 0.10.1; pin 0.14.0 sdist."
+
+# Transitive of aioboto3 (via aiobotocore) -- aiobotocore 2.25.1
+# requires aioitertools in `>=0.5.1,<1.0.0`; Noble does not carry it.
+# Pin 0.13.0 (current upstream release).
+[[dep]]
+pypi_name = "aioitertools"
+constraint = ">=0.5.1,<1.0.0"
+debian_name = "python3-aioitertools"
+extra = "vendors"
+transitive_of = "aioboto3"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/fd/3c/53c4a17a05fb9ea2313ee1777ff53f5e001aefd5cc85aa2f4c2d982e1e38/aioitertools-0.13.0.tar.gz"
+sdist_sha256 = "620bd241acc0bbb9ec819f1ab215866871b4bbd1f73836a55f799200ee86950c"
+min_version = "0.5.1"
+notes = "Transitive of aiobotocore 2.25.1 (aioitertools >=0.5.1,<1.0.0). Not in Debian; pin 0.13.0 sdist. Upstream pyproject uses flit_core >=3.11 + PEP 639 license metadata Noble's flit_core 3.9 rejects, so the Avalan-side debian/ ships a quilt patch that softens the build-system pin and rewrites the license metadata to a flit_core 3.9-compatible form."
+
 [[dep]]
 pypi_name = "anthropic"
 constraint = ">=0.71.0,<0.72.0"
