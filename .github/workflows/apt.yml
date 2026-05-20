@@ -104,6 +104,7 @@ jobs:
           - aioboto3
           - aiobotocore
           - aioitertools
+          - anthropic
           - anyio
           - boto3
           - botocore
