@@ -1,0 +1,20 @@
+websockets (16.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of websockets 16.0 for the Avalan PPA.
+  * Transitive runtime dep of google-genai (Avalan's `vendors`
+    extra). Noble ships 10.4-1 (pre-asyncio.client rename); pinned
+    at 16.0 so the floor google-genai asks for is met.
+  * Hand-packaged from the upstream PyPI sdist rather than rebuilt
+    from Debian sid because the upstream pyproject uses the PEP 639
+    SPDX `license = "BSD-3-Clause"` string form, which Noble's
+    python3-setuptools 68 rejects during wheel metadata validation
+    (the string parses as ambiguous against the auto-detected
+    LICENSE file). Avalan does not patch debian-rebuild sources, so
+    the row flips to pypi-sdist and the softening lives here.
+  * Ship a quilt patch (pyproject-for-noble) that rewrites the SPDX
+    license string to the legacy `license = { file = "LICENSE" }`
+    table form and drops the `Programming Language :: Python :: 3.14`
+    trove classifier unknown to Noble's setuptools. No runtime
+    impact.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 09:00:00 -0300

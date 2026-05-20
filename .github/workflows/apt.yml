@@ -107,6 +107,7 @@ jobs:
           - huggingface-hub
           - jinja2
           - mcp
+          - websockets
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4

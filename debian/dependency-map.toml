@@ -313,8 +313,12 @@ notes = "Transitive runtime dep of google-genai. Noble ships 1.5.1 (way below th
 
 # Transitive of google-genai -- google-genai requires websockets
 # >= 13.0.0 but Noble ships 10.4 (asyncio.client subpackage layout
-# predates the rename). Debian sid carries 16.0-1, inside google-genai's
-# `>= 13.0.0, < 17.0` window. Pure-Python; rebuild as-is.
+# predates the rename). Debian sid carries 16.0-1, but the upstream
+# pyproject uses the PEP 639 SPDX `license = "BSD-3-Clause"` string
+# form which Noble's python3-setuptools 68 rejects during wheel
+# metadata validation; per APT.md we don't patch debian-rebuild
+# sources, so the row is pypi-sdist and a quilt patch under
+# packages/websockets/debian/patches/ softens the metadata.
 [[dep]]
 pypi_name = "websockets"
 constraint = ">=13.0.0,<17.0"
@@ -322,12 +326,11 @@ debian_name = "python3-websockets"
 extra = "vendors"
 transitive_of = "google-genai"
 source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "python-websockets"
-debian_suite = "sid"
-debian_version = "16.0-1"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/04/24/4b2031d72e840ce4c1ccb255f693b15c334757fc50023e4db9537080b8c4/websockets-16.0.tar.gz"
+sdist_sha256 = "5f6261a5e56e8d5c42a4497b364ea24d94d9563e8fbd44e78ac40879c60179b5"
 min_version = "13.0.0"
-notes = "Transitive runtime dep of google-genai. Noble ships 10.4 (pre-asyncio.client rename). Rebuild sid 16.0-1 into the PPA; pure-Python with no transitive Debian Depends gaps. Debian source package is python-websockets (binary is python3-websockets)."
+notes = "Transitive runtime dep of google-genai. Noble ships 10.4 (pre-asyncio.client rename); pin 16.0 sdist. Originally targeted as a debian-rebuild of python-websockets 16.0-1 but flipped to pypi-sdist after Noble's setuptools 68 rejected the upstream PEP 639 SPDX license string. Builds the optional C speedups extension."
 
 [[dep]]
 pypi_name = "openai"

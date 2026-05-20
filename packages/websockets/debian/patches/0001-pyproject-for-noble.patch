@@ -1,0 +1,37 @@
+Description: Soften pyproject for Noble's setuptools + classifier table
+ Two small metadata tweaks bundled into one patch because they
+ collapse to the same goal -- making websockets build against Noble's
+ archive without an unreleased setuptools:
+ .
+ * Rewrite the PEP 639 SPDX string `license = "BSD-3-Clause"` back to
+   the legacy `license = { file = "LICENSE" }` table form Noble's
+   older setuptools accepts; otherwise wheel metadata validation
+   rejects the pyproject as ambiguous against the auto-detected
+   LICENSE.
+ * Drop the `Programming Language :: Python :: 3.14` trove
+   classifier. Noble's setuptools classifier table predates Python
+   3.14 and refuses to emit the wheel until the unknown entry is
+   removed. Purely informational; no runtime impact.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-20
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -6,7 +6,7 @@
+ name = "websockets"
+ description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
+ requires-python = ">=3.10"
+-license = "BSD-3-Clause"
++license = { file = "LICENSE" }
+ authors = [
+     { name = "Aymeric Augustin", email = "aymeric.augustin@m4x.org" },
+ ]
+@@ -21,7 +21,6 @@
+     "Programming Language :: Python :: 3.11",
+     "Programming Language :: Python :: 3.12",
+     "Programming Language :: Python :: 3.13",
+-    "Programming Language :: Python :: 3.14",
+ ]
+ dynamic = ["version", "readme"]
+

@@ -1,0 +1,36 @@
+Source: websockets
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-all-dev,
+ python3-setuptools,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/python-websockets/websockets
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-websockets
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
+Description: WebSocket protocol library for asyncio (Avalan PPA transitive)
+ websockets is a library for building WebSocket clients and servers
+ with a focus on correctness, simplicity, robustness, and
+ performance. This package is built for the Avalan PPA because
+ google-genai (Avalan's `vendors` extra) requires `websockets >=
+ 13.0.0` while Noble ships 10.4-1, which predates the asyncio.client
+ subpackage rename. Pinned at 16.0 -- the current upstream release
+ that mirrors Debian sid's `python-websockets 16.0-1`.
+ .
+ The optional C speedups extension (`websockets.speedups`) is built
+ opportunistically; the package falls back to the pure-Python path
+ when the extension is unavailable.

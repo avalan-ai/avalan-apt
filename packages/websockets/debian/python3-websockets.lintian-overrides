@@ -1,0 +1,5 @@
+# Upstream ships a `websockets` console_scripts entry point (`python -m
+# websockets.cli` wrapper) but no manpage. The Avalan .deb does not
+# bundle one because the entry point is essentially a connect-and-echo
+# debug helper; users run `websockets --help` or read the upstream docs.
+no-manual-page [usr/bin/websockets]

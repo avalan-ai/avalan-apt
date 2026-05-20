@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=websockets
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+# Build the optional C speedups extension. Upstream's setup.py uses
+# `optional=True` so a missing toolchain falls back silently; the
+# Noble builder image has build-essential so the extension is built.
+export BUILD_EXTENSION=yes
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need pytest-asyncio + a network fixture suite that
+# spins up real WS servers. Skip at build time; correctness comes from
+# upstream CI plus Avalan's autopkgtest smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."
