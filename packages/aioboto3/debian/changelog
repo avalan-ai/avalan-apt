@@ -1,0 +1,15 @@
+aioboto3 (15.5.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of aioboto3 15.5.0 for the Avalan PPA.
+  * Avalan ships aioboto3 in its `vendors` extra at
+    `>= 15.0.0, < 16.0.0`. Not in Debian; pinned from the
+    upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-for-noble) that softens two
+    pyproject metadata entries Noble's archive cannot satisfy as
+    written: relax the `setuptools >= 68.2.0` build-system pin
+    to plain `setuptools` (Noble ships 68.1.2, two patch
+    releases below the floor), and drop the
+    `Programming Language :: Python :: 3.14` trove classifier
+    unknown to Noble's setuptools. No runtime impact.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 12:00:00 -0300

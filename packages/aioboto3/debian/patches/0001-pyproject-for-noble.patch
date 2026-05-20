@@ -1,0 +1,38 @@
+Description: Soften pyproject for Noble's setuptools
+ Two small, independent metadata tweaks bundled into one patch
+ because they collapse to the same goal -- making aioboto3 build
+ against Noble's archive without an unreleased setuptools:
+ .
+ * Relax the strict `setuptools >= 68.2.0` build-system pin to
+   plain `setuptools`. Noble ships python3-setuptools 68.1.2-2,
+   two patch releases below the floor; the actual build machinery
+   aioboto3 uses (setuptools.build_meta + setuptools-scm 8.x +
+   dynamic version via `_version.py` fallback) works on
+   68.1.2 without changes.
+ * Drop the `Programming Language :: Python :: 3.14` trove
+   classifier. Noble's setuptools classifier table predates
+   Python 3.14 and refuses to emit the wheel until the unknown
+   entry is removed. Purely informational; no runtime impact.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-20
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -28,7 +28,6 @@ classifiers = [
+     "Programming Language :: Python :: 3.11",
+     "Programming Language :: Python :: 3.12",
+     "Programming Language :: Python :: 3.13",
+-    "Programming Language :: Python :: 3.14",
+ ]
+ dynamic = ["version"]
+
+@@ -73,7 +72,7 @@ required-version = ">=0.6.1"
+ cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
+
+ [build-system]
+-requires = ["setuptools>=68.2.0", "setuptools-scm>=8"]
++requires = ["setuptools", "setuptools-scm>=8"]
+ build-backend = "setuptools.build_meta"
+
+ [tool.setuptools.dynamic]

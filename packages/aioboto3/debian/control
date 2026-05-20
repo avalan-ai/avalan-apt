@@ -1,0 +1,35 @@
+Source: aioboto3
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+ python3-setuptools-scm,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/terricain/aioboto3
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-aioboto3
+Architecture: all
+Depends:
+ python3-aiobotocore (>= 2.25.1),
+ python3-aiobotocore (<< 2.26.0),
+ python3-aiofiles (>= 23.2.1),
+ python3-boto3 (>= 1.40.46),
+ python3-boto3 (<< 1.40.62),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Async boto3 wrapper (Avalan PPA pin)
+ aioboto3 provides the asyncio interface that Avalan's `vendors`
+ extra uses to drive AWS services without blocking the event loop.
+ It re-exports boto3's high-level resources and clients on top of
+ aiobotocore. Avalan ships it in its `vendors` extras at
+ `>= 15.0.0, < 16.0.0`; nothing in Debian carries it, so the
+ rebuild pins 15.5.0.
