@@ -108,6 +108,7 @@ jobs:
           - anyio
           - boto3
           - botocore
+          - diffusers
           - google-auth
           - google-genai
           - httpx-sse
