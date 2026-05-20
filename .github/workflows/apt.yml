@@ -88,17 +88,13 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      # One cell per representative dep, covering the build backends
-      # still in play after 1.4.8 trimmed the default profile:
-      # setuptools (humanize) and setuptools+drop-rust-extension
-      # (huggingface-hub) for pypi-sdist rows, plus jinja2 as the
-      # debian-rebuild row whose upstream lintian profile diverges
-      # from Noble's (sid omits Priority on its binary packages).
-      # 1.4.8 dropped pandas/playwright/RestrictedPython/
-      # youtube-transcript-api/tiktoken from the default profile and
-      # relaxed enough ceilings that packaging/rich/fastapi/uvicorn/
-      # aiomysql/asyncpg/matplotlib/sqlglot/sympy/pillow now resolve
-      # from Noble, so their overlays and matrix cells are gone.
+      # One cell per hand-packaged dep landing in the Avalan PPA on
+      # Noble. Covers pypi-sdist overlays under packages/<dep>/ plus
+      # the debian-rebuild rows whose sid Build-Depends resolve from
+      # Noble alone (jinja2, google-auth). Rows whose build-deps need
+      # the Avalan PPA itself or a not-yet-packaged transitive
+      # (pydantic, openai, sqlalchemy) stay out of the matrix until
+      # those gaps close.
       matrix:
         dep:
           - aioboto3
