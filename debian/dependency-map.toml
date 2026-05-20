@@ -290,6 +290,45 @@ sdist_sha256 = "56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf
 min_version = "1.28.0"
 notes = "Not in Debian; pin 1.75.0 sdist. PyPI-name override applies."
 
+# Transitive of google-genai -- google-genai requires
+# google-auth[requests] >= 2.48.1 but Noble ships 1.5.1 (a five-year-old
+# release that predates the modern API). Debian sid carries 2.48.0-3, one
+# patch release below google-genai's floor; the gap is purely a typing
+# fix nothing in the avalan path exercises, so the Avalan-side
+# pyproject patch on google-genai relaxes its floor to 2.48.0 and we
+# rebuild sid's source unchanged.
+[[dep]]
+pypi_name = "google-auth"
+constraint = ">=2.48.0,<3.0.0"
+debian_name = "python3-google-auth"
+extra = "vendors"
+transitive_of = "google-genai"
+source = "ppa"
+provenance = "debian-rebuild"
+debian_source_pkg = "python-google-auth"
+debian_suite = "sid"
+debian_version = "2.48.0-3"
+min_version = "2.48.0"
+notes = "Transitive runtime dep of google-genai. Noble ships 1.5.1 (way below the modern API). Rebuild sid 2.48.0-3 into the PPA; all of sid's binary Depends (cachetools, cryptography, pyasn1, pyu2f, requests, rsa, openssl, etc.) resolve from Noble's archive."
+
+# Transitive of google-genai -- google-genai requires websockets
+# >= 13.0.0 but Noble ships 10.4 (asyncio.client subpackage layout
+# predates the rename). Debian sid carries 16.0-1, inside google-genai's
+# `>= 13.0.0, < 17.0` window. Pure-Python; rebuild as-is.
+[[dep]]
+pypi_name = "websockets"
+constraint = ">=13.0.0,<17.0"
+debian_name = "python3-websockets"
+extra = "vendors"
+transitive_of = "google-genai"
+source = "ppa"
+provenance = "debian-rebuild"
+debian_source_pkg = "python-websockets"
+debian_suite = "sid"
+debian_version = "16.0-1"
+min_version = "13.0.0"
+notes = "Transitive runtime dep of google-genai. Noble ships 10.4 (pre-asyncio.client rename). Rebuild sid 16.0-1 into the PPA; pure-Python with no transitive Debian Depends gaps. Debian source package is python-websockets (binary is python3-websockets)."
+
 [[dep]]
 pypi_name = "openai"
 constraint = ">=2.0.0,<3.0.0"
