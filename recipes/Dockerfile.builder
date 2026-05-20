@@ -9,7 +9,9 @@
 # The package set is a union of every Build-Depends across the
 # pypi-sdist overlays under packages/<source>/ -- hatchling /
 # hatch-vcs / poetry-core / pdm-backend / setuptools-scm / quilt /
-# lintian -- plus the codec headers Pillow needs. Inflating one
+# lintian -- plus the codec headers Pillow needs and the
+# openstack-pkg-tools / python3-* runtime set sid's
+# python-google-auth source needs (debian-rebuild). Inflating one
 # image is cheaper than apt-installing on every container start.
 
 FROM ubuntu:24.04
@@ -39,17 +41,24 @@ RUN apt-get update \
         libtiff-dev \
         libwebp-dev \
         lintian \
+        openstack-pkg-tools \
         pybuild-plugin-pyproject \
+        python3-aiohttp \
         python3-all \
         python3-all-dev \
         python3-babel \
+        python3-cachetools \
+        python3-cryptography \
         flit \
+        python3-flask \
         python3-hatch-fancy-pypi-readme \
         python3-hatch-vcs \
         python3-hatchling \
         python3-installer \
+        python3-jwt \
         python3-markupsafe \
         python3-numpy \
+        python3-openssl \
         python3-packaging \
         python3-pallets-sphinx-themes \
         python3-pdm-backend \
@@ -57,10 +66,19 @@ RUN apt-get update \
         python3-poetry-core \
         python3-poetry-dynamic-versioning \
         python3-pretend \
+        python3-pyasn1 \
+        python3-pyasn1-modules \
         python3-pygments \
         python3-pytest \
+        python3-pytest-asyncio \
+        python3-pytest-localserver \
         python3-pytest-mock \
         python3-pytest-runner \
+        python3-pytest-xdist \
+        python3-pyu2f \
+        python3-requests \
+        python3-responses \
+        python3-rsa \
         python3-setuptools \
         python3-setuptools-scm \
         python3-sphinx \
