@@ -113,6 +113,7 @@ jobs:
           - jinja2
           - mcp
           - s3transfer
+          - typing-inspection
           - websockets
     steps:
       - name: Check out avalan-apt
