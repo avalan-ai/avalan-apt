@@ -1,0 +1,85 @@
+Description: Build google-genai 1.75.0 against Noble's archive
+ Four small adjustments to upstream's pyproject so Noble's
+ python3-setuptools 68 and the existing Avalan PPA pins can produce
+ a wheel from the sdist:
+ .
+ * Trim the build-system requires from
+   `setuptools, wheel, twine>=6.1.0, packaging>=24.2, pkginfo>=1.12.0`
+   to `setuptools, wheel`. The latter three are distribution-upload
+   helpers (twine and the metadata-introspection libraries it relies
+   on); they are not consulted by `setuptools.build_meta` when
+   producing a wheel, and pulling them in pinned at floors above
+   Noble's archive blocks the offline build pipeline. Removing them
+   has no effect on the resulting wheel contents.
+ * Rewrite the PEP 639 SPDX string `license = "Apache-2.0"` back to
+   the legacy `license = { file = "LICENSE" }` table form Noble's
+   older setuptools accepts. Same workaround the rest of the per-dep
+   tree (anyio, anthropic) uses.
+ * Drop the `Programming Language :: Python :: 3.14` trove
+   classifier. Noble's setuptools classifier table predates Python
+   3.14 and refuses to emit the wheel until the unknown entry is
+   removed. Purely informational; no runtime impact.
+ * Soften three runtime-dependency floors so the resulting wheel
+   metadata resolves against the matching Avalan PPA / Noble
+   archive versions:
+     - `google-auth[requests] >= 2.48.1` -> `>= 2.48.0`. Debian sid
+       ships google-auth 2.48.0-3 (one patch release below the
+       nominal floor); the gap is a typing fix in google-auth that
+       Avalan's google-genai code path does not exercise.
+     - `httpx >= 0.28.1` -> `>= 0.26`. Noble ships httpx 0.26.0 in
+       universe; google-genai uses only the `AsyncClient`,
+       `Timeout`, `Response`, `Headers`, `TimeoutException`,
+       `ConnectError`, and `codes` surface — every entry of which
+       is stable since httpx 0.25.
+     - `typing-extensions >= 4.14.0` -> `>= 4.10`. Noble ships
+       typing-extensions 4.10.0 in main; google-genai uses
+       `TypeAlias`, `Self`, `TypedDict`, `override`, `Literal`,
+       `ParamSpec`, `Protocol`, `TypeGuard`, `runtime_checkable`,
+       `get_args`, `get_origin`, and `Awaitable` — every entry of
+       which is stable since typing-extensions 4.5. The 4.14 floor
+       is overhead from upstream's CI matrix rather than a real
+       runtime API requirement.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-20
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,12 +1,12 @@
+ [build-system]
+-requires = ["setuptools", "wheel", "twine>=6.1.0", "packaging>=24.2", "pkginfo>=1.12.0"]
++requires = ["setuptools", "wheel"]
+
+ [project]
+ name = "google-genai"
+ version = "1.75.0"
+ description = "GenAI Python SDK"
+ readme = "README.md"
+-license = "Apache-2.0"
++license = { file = "LICENSE" }
+ requires-python = ">=3.10"
+ authors = [
+     { name = "Google LLC", email = "googleapis-packages@google.com" },
+@@ -20,19 +20,18 @@
+     "Programming Language :: Python :: 3.11",
+     "Programming Language :: Python :: 3.12",
+     "Programming Language :: Python :: 3.13",
+-    "Programming Language :: Python :: 3.14",
+     "Topic :: Internet",
+     "Topic :: Software Development :: Libraries :: Python Modules",
+ ]
+ dependencies = [
+     "anyio>=4.8.0, <5.0.0",
+-    "google-auth[requests]>=2.48.1, <3.0.0",
+-    "httpx>=0.28.1, <1.0.0",
++    "google-auth[requests]>=2.48.0, <3.0.0",
++    "httpx>=0.26, <1.0.0",
+     "pydantic>=2.9.0, <3.0.0",
+     "requests>=2.28.1, <3.0.0",
+     "tenacity>=8.2.3, <9.2.0",
+     "websockets>=13.0.0, <17.0",
+-    "typing-extensions>=4.14.0, <5.0.0",
++    "typing-extensions>=4.10, <5.0.0",
+     "distro>=1.7.0, <2",
+     "sniffio",
+ ]

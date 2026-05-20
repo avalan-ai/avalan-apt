@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=google-genai
+export PYBUILD_SYSTEM=pyproject
+
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time; see debian/tests/."

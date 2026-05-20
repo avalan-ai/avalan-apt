@@ -1,0 +1,46 @@
+Source: google-genai
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools (>= 62),
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/googleapis/python-genai
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-google-genai
+Architecture: all
+Depends:
+ python3-anyio (>= 4.8.0),
+ python3-distro (>= 1.7.0),
+ python3-google-auth (>= 2.48.0),
+ python3-httpx (>= 0.26),
+ python3-pydantic (>= 2.9),
+ python3-requests (>= 2.28.1),
+ python3-sniffio,
+ python3-tenacity (>= 8.2.3),
+ python3-typing-extensions (>= 4.10),
+ python3-websockets (>= 13.0.0),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Google Gen AI Python SDK (Avalan PPA pin)
+ The Google Gen AI SDK provides typed Python bindings for the Gemini
+ (and Vertex AI) generative-model APIs, plus async / sync transports,
+ response streaming, and a Live websocket session. Avalan ships it in
+ its `vendors` extras at `>= 1.28.0, < 2.0.0`; nothing in Debian
+ carries it, so the rebuild pins 1.75.0.
+ .
+ The optional `aiohttp` transport, the `local-tokenizer` extra (which
+ pulls sentencepiece + protobuf), and the `pyopenssl` extra are
+ intentionally not declared as Depends -- they live behind try / except
+ ImportError guards inside the SDK, and Avalan exercises only the
+ default httpx transport. Callers that opt into those code paths get
+ a clear ImportError telling them which package to install into a
+ user-controlled venv.

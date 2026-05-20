@@ -1,0 +1,22 @@
+google-genai (1.75.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of google-genai 1.75.0 for the Avalan PPA.
+  * Runtime dep of Avalan's `vendors` extras. Not in Debian; the upstream
+    sdist declares its license via the PEP 639 SPDX `license = "Apache-2.0"`
+    string form Noble's python3-setuptools 68 rejects, and pins runtime
+    floors on `google-auth >= 2.48.1`, `httpx >= 0.28.1`, and
+    `typing-extensions >= 4.14.0` — one (or several) patch releases above
+    every matching package in Noble's archive.
+  * Ship a quilt patch (pyproject-for-noble) that rewrites the SPDX
+    license string to the legacy `license = { file = "LICENSE" }` table
+    form Noble's setuptools accepts, drops the `twine`, `packaging`, and
+    `pkginfo` entries from the build-system requires (those are
+    distribution-upload helpers, not wheel builders), strips the
+    Python 3.14 trove classifier unknown to Noble's setuptools, and
+    softens the runtime floors to versions that resolve against Noble
+    (4.10 for typing-extensions, 0.26 for httpx) and against the
+    matching Avalan PPA build of google-auth (2.48.0 from sid; one
+    patch release below upstream's nominal floor, with the gap living
+    entirely in a typing fix the avalan path does not exercise).
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 01:20:00 -0300
