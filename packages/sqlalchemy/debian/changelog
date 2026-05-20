@@ -1,0 +1,17 @@
+sqlalchemy (2.0.49-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of SQLAlchemy 2.0.49 for the Avalan PPA.
+  * Required by Avalan's `tool` extras (`SQLAlchemy >= 2.0.43`); Noble
+    ships 1.4.50, below the 2.x floor.
+  * Hand-packaged from the upstream PyPI sdist rather than rebuilt
+    from Debian sid because sid's source Build-Depends on
+    python3-zzzeeksphinx (>= 1.6.1) and Noble carries 1.5.0; the
+    Avalan project does not patch debian-rebuild sources, so the row
+    flips to pypi-sdist and the build skips the docs path entirely.
+  * Cython `sqlalchemy.cyextension` modules built opportunistically
+    against Noble's cython3; upstream's setup.py marks them
+    `optional=True` so a missing toolchain falls back to the pure-
+    Python path. The Noble builder image has cython3 + build-
+    essential so the extension is built.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 14:00:00 -0300

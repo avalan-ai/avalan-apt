@@ -93,8 +93,8 @@ jobs:
       # the debian-rebuild rows whose sid Build-Depends resolve from
       # Noble alone (jinja2, google-auth). Rows whose build-deps need
       # the Avalan PPA itself or a not-yet-packaged transitive
-      # (pydantic, openai, sqlalchemy) stay out of the matrix until
-      # those gaps close.
+      # (pydantic, openai) stay out of the matrix until those gaps
+      # close.
       matrix:
         dep:
           - aioboto3
@@ -113,6 +113,7 @@ jobs:
           - jinja2
           - mcp
           - s3transfer
+          - SQLAlchemy
           - typing-inspection
           - websockets
     steps:
@@ -125,6 +126,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential \
             ca-certificates \
+            cython3 \
             debhelper \
             devscripts \
             dh-python \

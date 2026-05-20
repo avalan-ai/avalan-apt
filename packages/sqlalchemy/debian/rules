@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=sqlalchemy
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests need a pinned pytest stack plus optional database
+# drivers (psycopg, asyncpg, aiomysql, ...) that we don't carry as
+# build dependencies. Skip at build time; correctness comes from
+# upstream CI plus the Avalan smoke import.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."

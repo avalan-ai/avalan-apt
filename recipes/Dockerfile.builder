@@ -28,6 +28,7 @@ RUN apt-get update \
         build-essential \
         ca-certificates \
         curl \
+        cython3 \
         debhelper \
         devscripts \
         dh-python \
