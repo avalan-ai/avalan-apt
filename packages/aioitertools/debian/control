@@ -1,0 +1,29 @@
+Source: aioitertools
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ flit,
+ pybuild-plugin-pyproject,
+ python3-all,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/omnilib/aioitertools
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-aioitertools
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: itertools and builtins for asyncio and mixed iterables (Avalan PPA transitive)
+ aioitertools is a small library that mirrors the Python standard
+ library's `itertools` module and several builtins (`all`, `any`,
+ `map`, `next`, `zip`, ...) for async iterables. This package is built
+ for the Avalan PPA because aiobotocore (Avalan's `vendors` extra,
+ reached via aioboto3) requires it and Noble's archive does not carry
+ it. Pinned at 0.13.0.

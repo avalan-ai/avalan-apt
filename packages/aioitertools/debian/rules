@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=aioitertools
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test.
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Upstream's tests run via unittest discover and pass cleanly with
+# Python 3.12 + stdlib only, but Noble's pybuild already runs them as
+# part of dh_auto_test when discoverable; nothing to override.

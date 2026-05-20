@@ -1,0 +1,15 @@
+aioitertools (0.13.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of aioitertools 0.13.0 for the Avalan PPA.
+  * Transitive runtime dep of aiobotocore (Avalan's `vendors`
+    extra, reached via aioboto3). Not in Debian; pinned from the
+    upstream PyPI sdist.
+  * Ship a quilt patch (pyproject-for-noble) that softens the
+    `flit_core >= 3.11` build-system pin to plain `flit_core`,
+    rewrites the PEP 639 SPDX `license = "MIT"` string to the
+    legacy `license = { file = "LICENSE" }` table form, and drops
+    the `license-files` key Noble's flit_core 3.9 does not parse.
+    No runtime impact: the runtime is pure Python and has no
+    dependencies on Python >= 3.10.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 10:30:00 -0300

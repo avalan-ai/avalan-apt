@@ -1,0 +1,41 @@
+Description: Soften pyproject for Noble's flit_core 3.9
+ Three small, independent metadata tweaks bundled into one patch
+ because they collapse to the same goal -- making aioitertools build
+ against Noble's archive without an unreleased flit_core:
+ .
+ * Relax the strict `flit_core >= 3.11, < 4` build-system pin to
+   plain `flit_core`. Noble ships flit 3.9.0-2 which bundles
+   flit_core 3.9.0; the actual sdist machinery aioitertools uses
+   (PKG-INFO parsing + package layout discovery) works on every
+   release back to flit_core 3.0. Upstream lifted the floor solely
+   so PEP 639 SPDX license validation would succeed.
+ * Rewrite the PEP 639 SPDX string `license = "MIT"` back to the
+   legacy `license = { file = "LICENSE" }` table form Noble's older
+   flit_core accepts; otherwise pyproject validation fails as
+   ambiguous against the auto-detected LICENSE file.
+ * Drop the `license-files = ["LICENSE"]` key. Noble's flit_core
+   3.9 does not recognize the PEP 639 field; the legacy
+   `license = { file = "LICENSE" }` form already ships the file in
+   the wheel metadata.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-20
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,13 +1,12 @@
+ [build-system]
+-requires = ["flit_core >=3.11,<4"]
++requires = ["flit_core"]
+ build-backend = "flit_core.buildapi"
+
+ [project]
+ name = "aioitertools"
+ readme = "README.md"
+ authors = [{ name = "Amethyst Reese", email = "amethyst@n7.gg" }]
+-license = "MIT"
+-license-files = ["LICENSE"]
++license = { file = "LICENSE" }
+ dynamic = ["version", "description"]
+ classifiers = [
+     "Framework :: AsyncIO",
