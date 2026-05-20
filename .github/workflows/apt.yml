@@ -104,6 +104,7 @@ jobs:
           - aioboto3
           - aiobotocore
           - aioitertools
+          - anyio
           - boto3
           - botocore
           - google-auth
