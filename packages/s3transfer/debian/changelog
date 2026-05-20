@@ -1,0 +1,11 @@
+s3transfer (0.14.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of s3transfer 0.14.0 for the Avalan PPA.
+  * Transitive runtime dep of boto3 1.40.61 (Avalan's `vendors`
+    extra, reached via aioboto3). Noble ships 0.10.1, below
+    boto3 1.40.61's `>= 0.14.0` floor; pinned from the upstream
+    PyPI sdist at 0.14.0.
+  * No source patches required: upstream's setup.py is the sole
+    build entry point and Noble's setuptools 68 accepts it as-is.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 11:15:00 -0300

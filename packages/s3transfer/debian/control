@@ -1,0 +1,30 @@
+Source: s3transfer
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-setuptools,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/boto/s3transfer
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-s3transfer
+Architecture: all
+Depends:
+ python3-botocore (>= 1.37.4),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Amazon S3 Transfer Manager (Avalan PPA transitive)
+ s3transfer is a high-level transfer manager that boto3 uses for
+ multipart uploads, range-based downloads, and copy operations.
+ This package is built for the Avalan PPA because boto3 1.40.61
+ (transitively required by aioboto3 in Avalan's `vendors` extra)
+ pins s3transfer at `>= 0.14.0, < 0.15.0` while Noble ships
+ 0.10.1. Pinned at 0.14.0, the lowest version satisfying boto3's
+ floor.
