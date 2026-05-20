@@ -1,0 +1,36 @@
+mcp (1.27.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of mcp 1.27.1 for the Avalan PPA.
+  * Runtime dep of Avalan's `server` extras. Not in Debian; the upstream
+    sdist pulls `uv-dynamic-versioning` at build time and a handful of
+    runtime dependencies (`pydantic-settings`, `sse-starlette`) that
+    Noble's archive does not carry, so we hand-package from PyPI.
+  * Ship a quilt patch (pyproject-for-noble) that switches the
+    `[tool.hatch.version]` source from `uv-dynamic-versioning` to a
+    static `version = "1.27.1"` so Noble's python3-hatchling builds the
+    wheel without the unreleased uv helper, drops the
+    `pydantic-settings` and `sse-starlette` runtime deps that are not in
+    Noble (FastMCP's HTTP transports become unusable; the JSON-RPC core
+    Avalan exercises is unaffected), and softens floors that fall below
+    Noble's archive (httpx, jsonschema, pyjwt, uvicorn, typing-inspection)
+    without changing the API surface the eagerly-loaded modules use.
+  * Ship a quilt patch (lazy-fastmcp-import) that swaps the eager
+    `from .fastmcp import FastMCP` in `mcp/server/__init__.py` for a
+    PEP 562 `__getattr__` shim so `import mcp` does not pull
+    pydantic_settings / starlette / sse-starlette at module load. The
+    public attribute (`mcp.server.FastMCP`) is preserved.
+  * Ship a quilt patch (defer-typevar-default-annotations) that adds
+    `from __future__ import annotations` to `mcp/client/session.py`,
+    `mcp/client/experimental/task_handlers.py`, and
+    `mcp/shared/progress.py`, plus spells out the third TypeVar
+    explicitly at one runtime call site in
+    `mcp/client/session.py:_received_request`. Noble's
+    typing_extensions 4.10 carries the `default=` keyword on TypeVar
+    but does not patch `Generic.__class_getitem__` to consult that
+    default, so subscripting `RequestContext` with only two of its
+    three type arguments at module import time raises TypeError. PEP
+    563 string annotations sidestep the eager evaluation; the
+    explicit third argument keeps the one runtime construction
+    valid. Drop the patch once Noble ships typing_extensions >= 4.12.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Wed, 20 May 2026 00:55:00 -0300

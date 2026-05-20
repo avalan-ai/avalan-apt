@@ -1,0 +1,3 @@
+0001-pyproject-for-noble.patch
+0002-lazy-fastmcp-import.patch
+0003-defer-typevar-default-annotations.patch

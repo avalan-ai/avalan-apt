@@ -104,6 +104,7 @@ jobs:
           - humanize
           - huggingface-hub
           - jinja2
+          - mcp
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4

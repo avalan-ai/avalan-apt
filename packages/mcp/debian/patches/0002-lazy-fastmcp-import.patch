@@ -1,0 +1,32 @@
+Description: Defer the FastMCP import in mcp.server until first attribute access
+ `mcp.server.__init__` eagerly imported `from .fastmcp import FastMCP`,
+ which in turn pulled `pydantic_settings`, `sse_starlette`, and the
+ starlette HTTP transports at module load time. Avalan ships Noble's
+ archive plus a thin PPA layer that omits those three packages — they
+ are only reachable from FastMCP's HTTP / SSE paths, which Avalan does
+ not invoke. Switch to a PEP 562 `__getattr__` shim so the import
+ happens lazily on first attribute access. The public surface
+ (`from mcp.server import FastMCP`) is preserved; only callers that
+ actually touch FastMCP pay the cost of resolving its transitive
+ deps. Without this, `import mcp` itself fails on a Noble host
+ because of the missing pydantic_settings.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-19
+
+--- a/src/mcp/server/__init__.py
++++ b/src/mcp/server/__init__.py
+@@ -1,5 +1,12 @@
+-from .fastmcp import FastMCP
+ from .lowlevel import NotificationOptions, Server
+ from .models import InitializationOptions
+
+ __all__ = ["Server", "FastMCP", "NotificationOptions", "InitializationOptions"]
++
++
++def __getattr__(name):
++    if name == "FastMCP":
++        from .fastmcp import FastMCP
++
++        return FastMCP
++    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

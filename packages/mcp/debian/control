@@ -1,0 +1,48 @@
+Source: mcp
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatchling,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://modelcontextprotocol.io
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-mcp
+Architecture: all
+Depends:
+ python3-anyio (>= 4.5),
+ python3-httpx (>= 0.26),
+ python3-httpx-sse (>= 0.4),
+ python3-jsonschema (>= 4.10),
+ python3-multipart (>= 0.0.9),
+ python3-pydantic (>= 2.11),
+ python3-starlette (>= 0.27),
+ python3-typing-extensions (>= 4.9),
+ python3-typing-inspection (>= 0.4.1),
+ python3-uvicorn (>= 0.27),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Model Context Protocol SDK (Avalan PPA pin)
+ The Model Context Protocol (MCP) is a JSON-RPC dialect that lets
+ LLM-driven clients enumerate and invoke tools, prompts, and resources
+ exposed by a server. The `mcp` Python SDK provides typed client /
+ server primitives and a stdio transport. Avalan ships it in its
+ `server` extras at `>= 1.12.3, < 2.0.0`; nothing in Debian carries
+ it, so the rebuild pins 1.27.1.
+ .
+ Two upstream runtime dependencies (`sse-starlette`, `pydantic-settings`)
+ and the `[crypto]` extra of `pyjwt` are intentionally not declared as
+ Depends. They are only reached from FastMCP's HTTP/SSE transports and
+ the OAuth authentication handlers, which Noble's archive does not
+ carry. Avalan exercises only the JSON-RPC types and the stdio
+ transport, both of which work without those modules. Callers that pull
+ `mcp.server.fastmcp` or `mcp.server.sse` get a clear ImportError
+ telling them which package is missing.

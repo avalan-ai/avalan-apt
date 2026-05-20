@@ -1,0 +1,75 @@
+Description: Defer annotations + spell out RequestContext defaults on Noble
+ mcp 1.27.1 declares its third `RequestContext` TypeVar with
+ `default=Any` via `typing_extensions.TypeVar`, then subscripts the
+ class with only two type arguments at several module-import-time
+ sites. Filling in the missing third argument from the TypeVar's
+ default requires typing_extensions >= 4.12, which patches Python's
+ stock `Generic.__class_getitem__` so it consults
+ `typing_extensions.TypeVar.__default__`. Noble's archive ships
+ typing_extensions 4.10, which exposes the `default=` keyword but
+ does not patch `__class_getitem__`, so `import mcp` raises
+ `TypeError: Too few arguments for RequestContext; actual 2,
+ expected 3` on Noble.
+ .
+ Two targeted changes avoid the bump:
+ .
+ * Add `from __future__ import annotations` to the three modules
+   whose type-annotation subscripts trip the runtime check
+   (`mcp.client.session`, `mcp.client.experimental.task_handlers`,
+   `mcp.shared.progress`). With PEP 563 in effect the annotations
+   are stored as strings rather than evaluated at class definition,
+   matching what every modern typechecker already does and removing
+   the dependency on typing_extensions' `__class_getitem__` patch
+   for these annotations.
+ * Patch one remaining runtime call site in
+   `mcp/client/session.py:_received_request`, where
+   `RequestContext[ClientSession, Any]` is built at call time (not
+   inside an annotation). PEP 563 cannot help there; spell out the
+   third TypeVar explicitly as `Any` so the subscription is valid
+   under Noble's typing_extensions. Behaviour is identical because
+   that is exactly the value the default would supply.
+ .
+ Static type-checker output is unaffected (`Any` is the declared
+ default; `from __future__ import annotations` only changes
+ evaluation timing). Drop this patch once Noble ships
+ typing_extensions >= 4.12.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-20
+
+--- a/src/mcp/client/session.py
++++ b/src/mcp/client/session.py
+@@ -1,3 +1,5 @@
++from __future__ import annotations
++
+ import logging
+ from datetime import timedelta
+ from typing import Any, Protocol, overload
+@@ -543,7 +545,7 @@
+         await self.send_notification(types.ClientNotification(types.RootsListChangedNotification()))
+
+     async def _received_request(self, responder: RequestResponder[types.ServerRequest, types.ClientResult]) -> None:
+-        ctx = RequestContext[ClientSession, Any](
++        ctx = RequestContext[ClientSession, Any, Any](
+             request_id=responder.request_id,
+             meta=responder.request_meta,
+             session=self,
+--- a/src/mcp/client/experimental/task_handlers.py
++++ b/src/mcp/client/experimental/task_handlers.py
+@@ -12,6 +12,8 @@
+ - Server polls client's task status via tasks/get, tasks/result, etc.
+ """
+
++from __future__ import annotations
++
+ from dataclasses import dataclass, field
+ from typing import TYPE_CHECKING, Any, Protocol
+
+--- a/src/mcp/shared/progress.py
++++ b/src/mcp/shared/progress.py
+@@ -1,3 +1,5 @@
++from __future__ import annotations
++
+ from collections.abc import Generator
+ from contextlib import contextmanager
+ from dataclasses import dataclass, field
