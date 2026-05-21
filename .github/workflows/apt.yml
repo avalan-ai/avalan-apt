@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Nightly run at 05:00 UTC -- exercises the heavy gates
+    # (install-smoke, eventually clean-build / autopkgtest / piuparts)
+    # that don't fire on PR triggers.
+    - cron: '0 5 * * *'
 
 concurrency:
   group: apt-${{ github.workflow }}-${{ github.ref }}
@@ -158,6 +163,14 @@ jobs:
               exit 1
           fi
           echo "wheel METADATA version matches changelog: $actual"
+
+      - name: Upload Avalan .deb for install-smoke
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-smoke-debs-avalan
+          path: build/avalan_*_all.deb
+          if-no-files-found: error
+          retention-days: 1
 
   dep-build:
     name: dep-build (${{ matrix.dep }})
@@ -322,6 +335,14 @@ jobs:
           fi
           lintian --pedantic --info --fail-on "$fail_on" "$changes"
 
+      - name: Upload ${{ matrix.dep }} .deb for install-smoke
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-smoke-debs-dep-${{ matrix.dep }}
+          path: build/deps/python3-*.deb
+          if-no-files-found: error
+          retention-days: 1
+
   dep-build-chain:
     # The two PPA leaves whose Build-Depends pull other Avalan-PPA
     # packages: pydantic needs python3-annotated-types +
@@ -482,3 +503,66 @@ jobs:
               lintian --pedantic --info --fail-on error,warning \
                   "$changes"
           done
+
+      - name: Upload pydantic + openai .debs for install-smoke
+        # Only the two chain leaves; annotated-types, pydantic-core,
+        # and anyio also come out of this job but are already uploaded
+        # by their dep-build matrix cells.
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-smoke-debs-chain
+          path: |
+            build/deps/python3-pydantic_*.deb
+            build/deps/python3-openai_*.deb
+          if-no-files-found: error
+          retention-days: 1
+
+  install-smoke:
+    # Drops the Avalan .deb + every PPA-side dep .deb into a fresh
+    # `ubuntu:24.04` Docker container, apt-installs them so Noble's
+    # archive supplies the remaining transitive runtime deps, and
+    # then runs debian/tests/smoke against the result. Gates on push
+    # to main + the nightly schedule so PR runtime stays bounded;
+    # the underlying build matrices still run on every PR, so a
+    # broken .deb fails fast before this job ever fires.
+    name: install-smoke
+    runs-on: ubuntu-24.04
+    needs:
+      - binary-build
+      - dep-build
+      - dep-build-chain
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Download every install-smoke .deb artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: build/install-smoke
+          pattern: install-smoke-debs-*
+          merge-multiple: true
+
+      - name: List downloaded .debs
+        run: ls -la build/install-smoke/
+
+      - name: Install Avalan + deps in ubuntu:24.04 and run smoke
+        run: |
+          set -eux
+          docker run --rm \
+              --volume "$PWD:/work" \
+              --workdir /work \
+              --env DEBIAN_FRONTEND=noninteractive \
+              ubuntu:24.04 \
+              bash -euxc '
+                  apt-get update
+                  apt-get install -y --no-install-recommends \
+                      ca-certificates \
+                      dpkg-dev
+                  # apt-get install ./*.deb lets apt resolve every
+                  # transitive Depends: from Noble while pulling our
+                  # local .debs in for the PPA-side rows.
+                  apt-get install -y --no-install-recommends \
+                      ./build/install-smoke/*.deb
+                  ./debian/tests/smoke
+              '
