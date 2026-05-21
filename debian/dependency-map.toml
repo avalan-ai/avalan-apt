@@ -165,6 +165,24 @@ cargo_vendor = true
 min_version = "2.16.3"
 notes = "Transitive runtime dep of pydantic 2.x. Not in Noble; Debian sid carries 2.46.3-1 but the source Build-Depends on librust-* crate versions Noble does not match (pyo3 0.28, regex 1.11, ...). Pinned at 2.16.3 because that release uses pyo3 0.20.2 (which Noble's python3-maturin 1.3.2 understands) and pairs with pydantic 2.6.4 (a future pypi-sdist row that will replace the current sid 2.13.3-1 debian-rebuild)."
 
+# Transitive of pydantic -- pydantic 2.6.4 requires annotated-types
+# (>= 0.4.0); not in Noble at all. Debian sid carries 0.7.0-1 whose
+# Build-Depends resolve from Noble alone (hatchling, pytest), so the
+# row is debian-rebuild rather than pypi-sdist.
+[[dep]]
+pypi_name = "annotated-types"
+constraint = ">=0.4.0"
+debian_name = "python3-annotated-types"
+extra = "server"
+transitive_of = "pydantic"
+source = "ppa"
+provenance = "debian-rebuild"
+debian_source_pkg = "python-annotated-types"
+debian_suite = "sid"
+debian_version = "0.7.0-1"
+min_version = "0.4.0"
+notes = "Transitive runtime dep of pydantic 2.6.4 (annotated-types >= 0.4.0). Not in Noble or older Debian releases; sid 0.7.0-1 builds cleanly against Noble's hatchling and pytest, no Avalan-side patches required."
+
 # Transitive of pydantic -- pydantic 2.x requires typing-inspection
 # (>=0.4.2 in 2.13.x); not in Noble at all.
 [[dep]]

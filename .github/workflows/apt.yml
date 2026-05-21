@@ -91,9 +91,9 @@ jobs:
       # One cell per hand-packaged dep landing in the Avalan PPA on
       # Noble. Covers pypi-sdist overlays under packages/<dep>/ plus
       # the debian-rebuild rows whose sid Build-Depends resolve from
-      # Noble alone (jinja2, google-auth). Rows whose build-deps need
-      # the Avalan PPA itself (pydantic, openai) stay out of the
-      # matrix until that gap closes. pydantic-core is
+      # Noble alone (jinja2, google-auth, annotated-types). Rows whose
+      # build-deps need the Avalan PPA itself (pydantic, openai) stay
+      # out of the matrix until that gap closes. pydantic-core is
       # `cargo_vendor = true`, so the prep step runs `cargo vendor`
       # (network-allowed) before the build step which stays offline.
       matrix:
@@ -101,6 +101,7 @@ jobs:
           - aioboto3
           - aiobotocore
           - aioitertools
+          - annotated-types
           - anthropic
           - anyio
           - boto3
