@@ -559,7 +559,7 @@ jobs:
       - binary-build
       - dep-build
       - dep-build-chain
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
@@ -610,7 +610,7 @@ jobs:
       - binary-build
       - dep-build
       - dep-build-chain
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
