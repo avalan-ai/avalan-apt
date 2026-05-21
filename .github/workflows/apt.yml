@@ -591,3 +591,58 @@ jobs:
                       ./build/install-smoke/*.deb
                   ./debian/tests/smoke
               '
+
+  autopkgtest:
+    # Same .deb set as install-smoke, but drives the smoke test via
+    # `autopkgtest` instead of invoking debian/tests/smoke directly.
+    # autopkgtest exercises the same script through the proper
+    # harness (AUTOPKGTEST_TMP, restrictions, structured pass/fail),
+    # which is what Launchpad's autopkgtest queue uses against the
+    # PPA -- catching shape regressions in debian/tests/control here
+    # is cheaper than catching them post-upload. Gates on push +
+    # nightly schedule for the same reason as install-smoke.
+    name: autopkgtest
+    runs-on: ubuntu-24.04
+    needs:
+      - binary-build
+      - dep-build
+      - dep-build-chain
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Download every install-smoke .deb artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: build/install-smoke
+          pattern: install-smoke-debs-*
+          merge-multiple: true
+
+      - name: Run autopkgtest in ubuntu:24.04
+        run: |
+          set -eux
+          docker run --rm \
+              --volume "$PWD:/work" \
+              --workdir /work \
+              --env DEBIAN_FRONTEND=noninteractive \
+              ubuntu:24.04 \
+              bash -euxc '
+                  apt-get update
+                  apt-get install -y --no-install-recommends \
+                      autopkgtest \
+                      ca-certificates \
+                      dpkg-dev
+                  # Install the full closure first so debian/tests/smoke
+                  # finds every import it expects. autopkgtest --null
+                  # reuses the current shell as the test environment,
+                  # so the install has to happen before the autopkgtest
+                  # call -- the null backend will not install for us.
+                  apt-get install -y --no-install-recommends \
+                      ./build/install-smoke/*.deb
+                  # --no-built-binaries: we are not building from
+                  # source, we already installed the .debs above.
+                  # /work as the test argument tells autopkgtest to
+                  # read debian/tests/control out of the source tree.
+                  autopkgtest --no-built-binaries /work -- null
+              '
