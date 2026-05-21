@@ -339,6 +339,47 @@ def test_cargo_vendor_leaves_upstream_cargo_config_untouched(
     assert upstream_cargo.read_text() == "[build]\nrustflags = []\n"
 
 
+def test_cargo_vendor_prunes_missing_files_from_checksum_json(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Simulate what cargo vendor lays down on disk, then confirm the
+    # post-process pass drops the orphan Cargo.toml.orig entry from
+    # the checksum manifest -- the regression that surfaced on amd64
+    # CI where the file was listed in .cargo-checksum.json but never
+    # written.
+    src = tmp_path / "tree"
+    src.mkdir()
+    (src / "Cargo.toml").write_text('[package]\nname = "w"\n')
+    (src / "Cargo.lock").write_text("version = 3\n")
+    vendor = src / "debian" / "vendor" / "ahash"
+    vendor.mkdir(parents=True)
+    (vendor / "Cargo.toml").write_text("[package]\nname = \"ahash\"\n")
+    import json as _json
+    (vendor / ".cargo-checksum.json").write_text(
+        _json.dumps(
+            {
+                "files": {
+                    "Cargo.toml": "aa",
+                    "Cargo.toml.orig": "bb",
+                },
+                "package": "abcd",
+            }
+        )
+    )
+
+    def fake_runner(*args, **kwargs):
+        return type("_Proc", (), {"stdout": ""})()
+
+    monkeypatch.setattr(pds.shutil, "which", lambda _name: "/usr/bin/cargo")
+    monkeypatch.setattr(pds.subprocess, "run", fake_runner)
+
+    pds.cargo_vendor(src)
+
+    data = _json.loads((vendor / ".cargo-checksum.json").read_text())
+    assert data["files"] == {"Cargo.toml": "aa"}
+    assert data["package"] == "abcd"
+
+
 def test_cargo_vendor_missing_cargo_raises(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

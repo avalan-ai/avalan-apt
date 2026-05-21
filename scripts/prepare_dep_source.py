@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -225,6 +226,13 @@ def cargo_vendor(
     ``debian/source/include-binaries`` listing every binary file under
     ``debian/vendor/`` so ``3.0 (quilt)`` accepts the tree.
 
+    Post-process each crate's ``.cargo-checksum.json`` to drop entries
+    whose backing file is missing from the vendored tree. Cargo 1.75
+    on different hosts disagrees on which files it copies (``Cargo
+    .toml.orig`` shows up under amd64 but not arm64), and the build
+    step refuses to proceed if the checksum json references a file
+    that is not present.
+
     The matching cargo registry redirect is written by
     ``debian/rules`` at build time; this helper does not touch the
     upstream ``.cargo/config.toml``.
@@ -257,7 +265,24 @@ def cargo_vendor(
         cwd=str(source_dir),
         check=True,
     )
+    _prune_vendor_checksums(source_dir / _CARGO_VENDOR_REL_DIR)
     _write_include_binaries(source_dir)
+
+
+def _prune_vendor_checksums(vendor_dir: Path) -> None:
+    if not vendor_dir.is_dir():
+        return
+    for checksum in vendor_dir.glob("*/.cargo-checksum.json"):
+        data = json.loads(checksum.read_text())
+        files = data.get("files", {})
+        pruned = {
+            name: digest
+            for name, digest in files.items()
+            if (checksum.parent / name).is_file()
+        }
+        if pruned != files:
+            data["files"] = pruned
+            checksum.write_text(json.dumps(data, separators=(",", ":")))
 
 
 def _looks_binary(path: Path, *, chunk: int = 4096) -> bool:
