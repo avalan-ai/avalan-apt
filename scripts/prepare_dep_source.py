@@ -272,6 +272,8 @@ def cargo_vendor(
 def _prune_vendor_checksums(vendor_dir: Path) -> None:
     if not vendor_dir.is_dir():
         return
+    total_pruned = 0
+    crates_pruned = 0
     for checksum in vendor_dir.glob("*/.cargo-checksum.json"):
         data = json.loads(checksum.read_text())
         files = data.get("files", {})
@@ -281,8 +283,17 @@ def _prune_vendor_checksums(vendor_dir: Path) -> None:
             if (checksum.parent / name).is_file()
         }
         if pruned != files:
+            removed = len(files) - len(pruned)
+            total_pruned += removed
+            crates_pruned += 1
             data["files"] = pruned
             checksum.write_text(json.dumps(data, separators=(",", ":")))
+    if total_pruned:
+        print(
+            f"cargo_vendor: pruned {total_pruned} orphan checksum "
+            f"entries across {crates_pruned} crates",
+            file=sys.stderr,
+        )
 
 
 def _looks_binary(path: Path, *, chunk: int = 4096) -> bool:
