@@ -46,11 +46,32 @@ python3 -c 'import avalan; print(f"smoke: import avalan ok ({avalan.__file__})")
 # only surface when main() runs).
 python3 -c 'from avalan.cli.__main__ import main; print("smoke: cli entry point ok")'
 
-# Every default-profile extra must import. Names mirror the upstream
-# pyproject's [project.optional-dependencies] entries that Avalan
-# ships in the .deb (agent, server, tool, vendors).
-for extra in agent server tool vendors; do
+# `agent`, `server`, and `tool` are real subpackages under avalan/;
+# importing them confirms the .deb shipped the right tree.
+for extra in agent server tool; do
     python3 -c "import importlib; importlib.import_module(f'avalan.${extra}'); print(f'smoke: import avalan.${extra} ok')"
 done
+
+# The `vendors` extra in upstream's pyproject is purely a grouping of
+# third-party SDKs (aioboto3, anthropic, diffusers, google-genai,
+# openai, pillow); there is no `avalan.vendors` subpackage. Verify
+# the install by importing the SDKs themselves so a missing or broken
+# vendor .deb fails this script.
+python3 - <<'PY'
+import importlib
+import warnings
+
+warnings.simplefilter("ignore")
+for module in (
+    "aioboto3",
+    "anthropic",
+    "diffusers",
+    "google.genai",
+    "openai",
+    "PIL",
+):
+    importlib.import_module(module)
+    print(f"smoke: import {module} ok")
+PY
 
 echo "smoke: OK"
