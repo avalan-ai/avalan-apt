@@ -34,6 +34,12 @@ jobs:
             python3-packaging \
             wget
 
+      - name: Cache Avalan sdist
+        uses: actions/cache@v4
+        with:
+          path: build/avalan_*.orig.tar.gz
+          key: avalan-sdist-${{ hashFiles('release.toml') }}
+
       - name: Fetch and overlay the upstream Avalan sdist
         run: scripts/prepare-source
 
@@ -68,6 +74,12 @@ jobs:
             python3-poetry-dynamic-versioning \
             python3-pytest \
             wget
+
+      - name: Cache Avalan sdist
+        uses: actions/cache@v4
+        with:
+          path: build/avalan_*.orig.tar.gz
+          key: avalan-sdist-${{ hashFiles('release.toml') }}
 
       - name: Prepare upstream sdist
         run: scripts/prepare-source
@@ -111,6 +123,12 @@ jobs:
             python3-poetry-dynamic-versioning \
             python3-pytest \
             wget
+
+      - name: Cache Avalan sdist
+        uses: actions/cache@v4
+        with:
+          path: build/avalan_*.orig.tar.gz
+          key: avalan-sdist-${{ hashFiles('release.toml') }}
 
       - name: Prepare upstream sdist
         run: scripts/prepare-source
@@ -250,6 +268,18 @@ jobs:
             xz-utils \
             zlib1g-dev
 
+      - name: Cache ${{ matrix.dep }} source artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/deps/*.orig.tar.gz
+            build/deps/*.orig.tar.xz
+            build/deps/*.orig.tar.bz2
+            build/deps/*.debian.tar.gz
+            build/deps/*.debian.tar.xz
+            build/deps/*.dsc
+          key: dep-sdist-${{ matrix.dep }}-${{ hashFiles('debian/dependency-map.toml') }}
+
       - name: Prepare ${{ matrix.dep }} source
         env:
           DEP: ${{ matrix.dep }}
@@ -343,6 +373,18 @@ jobs:
             rustc \
             wget \
             xz-utils
+
+      - name: Cache chain source artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/deps/*.orig.tar.gz
+            build/deps/*.orig.tar.xz
+            build/deps/*.orig.tar.bz2
+            build/deps/*.debian.tar.gz
+            build/deps/*.debian.tar.xz
+            build/deps/*.dsc
+          key: dep-sdist-chain-${{ hashFiles('debian/dependency-map.toml') }}
 
       - name: Build annotated-types
         run: |
