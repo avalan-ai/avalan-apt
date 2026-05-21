@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Drop missing-file entries from each crate's .cargo-checksum.json.
+
+debian/rules runs this right before maturin invokes cargo, after
+dh_clean has had a chance to strip leftover `*.orig` files. Without
+the pruning step cargo's checksum verification aborts with
+"failed to calculate checksum of: .../Cargo.toml.orig (No such file
+or directory)" on hosts where the vendored manifest references files
+that cargo never copied into the tree (notably amd64 cargo 1.75).
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+def main() -> int:
+    root = Path("debian/vendor")
+    if not root.is_dir():
+        return 0
+    total = 0
+    for checksum in root.glob("*/.cargo-checksum.json"):
+        data = json.loads(checksum.read_text())
+        files = data.get("files", {})
+        pruned = {
+            name: digest
+            for name, digest in files.items()
+            if (checksum.parent / name).is_file()
+        }
+        if pruned != files:
+            total += len(files) - len(pruned)
+            data["files"] = pruned
+            checksum.write_text(json.dumps(data, separators=(",", ":")))
+    if total:
+        print(f"prune-vendor-checksums: dropped {total} orphan entries")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

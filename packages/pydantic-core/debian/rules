@@ -37,6 +37,11 @@ export RUSTC = /usr/bin/rustc
 # prepare time (see scripts/prepare-dep-source). cargo resolves the
 # `directory =` path relative to the config file, so spell it out as
 # an absolute path computed from $(CURDIR) -- the source root.
+# Run the checksum pruner against the vendor tree right before the
+# build: it drops manifest entries whose backing file dpkg / dh_clean
+# stripped (notably Cargo.toml.orig under amd64 cargo 1.75 -- the
+# upstream stripper deletes anything matching `*.orig` in the source
+# tree, which leaves the manifest with a phantom entry).
 override_dh_auto_configure:
 	mkdir -p debian/cargo-home
 	printf '%s\n' \
@@ -46,6 +51,7 @@ override_dh_auto_configure:
 	    '[source.vendored-sources]' \
 	    'directory = "$(CURDIR)/debian/vendor"' \
 	    > debian/cargo-home/config.toml
+	debian/prune-vendor-checksums
 	dh_auto_configure
 
 # Upstream tests need pytest-benchmark, hypothesis, dirty-equals,
