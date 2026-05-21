@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/pkg-info.mk
+
 export PYBUILD_NAME=avalan
 export PYBUILD_SYSTEM=pyproject
 
@@ -10,6 +12,14 @@ export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 %:
 	dh $@ --buildsystem=pybuild
+
+# Force every top-level `version = "..."` literal in pyproject.toml to
+# match debian/changelog. Catches a stale [tool.poetry].version in the
+# Noble-compat patch and keeps the wheel METADATA aligned with the
+# .deb so smoke tests cannot drift across an upstream bump.
+override_dh_auto_configure:
+	sed -i 's/^version = "[^"]*"$$/version = "$(DEB_VERSION_UPSTREAM)"/' pyproject.toml
+	dh_auto_configure
 
 # Upstream's full test suite needs models, browsers, and API keys.
 # Skip it at build time; autopkgtest covers a smoke layer instead.

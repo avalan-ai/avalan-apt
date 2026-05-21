@@ -83,6 +83,64 @@ jobs:
       - name: Lintian (pedantic, fail on warnings)
         run: scripts/lint-package
 
+  binary-build:
+    name: binary-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            debhelper \
+            devscripts \
+            dh-python \
+            dpkg-dev \
+            fakeroot \
+            lintian \
+            pybuild-plugin-pyproject \
+            python3-all \
+            python3-all-dev \
+            python3-build \
+            python3-installer \
+            python3-poetry-core \
+            python3-poetry-dynamic-versioning \
+            python3-pytest \
+            wget
+
+      - name: Prepare upstream sdist
+        run: scripts/prepare-source
+
+      - name: Binary build (Avalan)
+        run: |
+          set -o pipefail
+          scripts/build-binary 2>&1 | tee build/binary-build.log
+
+      - name: Scan binary build log for forbidden network calls
+        run: scripts/scan-build-log build/binary-build.log
+
+      - name: Confirm wheel METADATA version matches debian/changelog
+        run: |
+          set -eu
+          deb=$(ls build/avalan_*_all.deb | head -n1)
+          test -n "$deb"
+          expected=$(dpkg-parsechangelog -l debian/changelog -S Version \
+              | sed 's/-.*//')
+          actual=$(dpkg-deb --fsys-tarfile "$deb" \
+              | tar -tf - 2>/dev/null \
+              | sed -n 's|.*/avalan-\([^/]*\)\.dist-info/.*|\1|p' \
+              | sort -u)
+          test -n "$actual"
+          if [ "$actual" != "$expected" ]; then
+              echo "FATAL: wheel METADATA version '$actual' differs from changelog upstream version '$expected'" >&2
+              exit 1
+          fi
+          echo "wheel METADATA version matches changelog: $actual"
+
   dep-build:
     name: dep-build (${{ matrix.dep }})
     runs-on: ubuntu-24.04
