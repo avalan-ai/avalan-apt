@@ -91,9 +91,10 @@ jobs:
       # One cell per hand-packaged dep landing in the Avalan PPA on
       # Noble. Covers pypi-sdist overlays under packages/<dep>/ plus
       # the debian-rebuild rows whose sid Build-Depends resolve from
-      # Noble alone (jinja2, google-auth, annotated-types). Rows whose
-      # build-deps need the Avalan PPA itself (pydantic, openai) stay
-      # out of the matrix until that gap closes. pydantic-core is
+      # Noble alone (jinja2, google-auth, annotated-types). Rows
+      # whose build-deps pull other PPA packages (pydantic, openai)
+      # live in the dep-build-chain job below instead, which dpkg-i's
+      # each prerequisite before the next build. pydantic-core is
       # `cargo_vendor = true`, so the prep step runs `cargo vendor`
       # (network-allowed) before the build step which stays offline.
       matrix:
@@ -232,3 +233,152 @@ jobs:
               fail_on=error
           fi
           lintian --pedantic --info --fail-on "$fail_on" "$changes"
+
+  dep-build-chain:
+    # The two PPA leaves whose Build-Depends pull other Avalan-PPA
+    # packages: pydantic needs python3-annotated-types +
+    # python3-pydantic-core, openai then needs python3-anyio +
+    # python3-pydantic on top. dpkg-i each prerequisite into the
+    # runner before the next build so dpkg-checkbuilddeps sees what
+    # Launchpad's builders would after a PPA upload. The chain
+    # rebuilds the three prereqs locally instead of reusing matrix
+    # artifacts to keep the job self-contained.
+    name: dep-build-chain
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            cargo \
+            cython3 \
+            debhelper \
+            devscripts \
+            dh-python \
+            dpkg-dev \
+            fakeroot \
+            flit \
+            lintian \
+            pybuild-plugin-pyproject \
+            python3-all \
+            python3-all-dev \
+            python3-distro \
+            python3-hatch-fancy-pypi-readme \
+            python3-hatch-vcs \
+            python3-hatchling \
+            python3-httpx \
+            python3-installer \
+            python3-maturin \
+            python3-packaging \
+            python3-pytest \
+            python3-setuptools \
+            python3-setuptools-scm \
+            python3-sniffio \
+            python3-tqdm \
+            python3-typing-extensions \
+            quilt \
+            rustc \
+            wget \
+            xz-utils
+
+      - name: Build annotated-types
+        run: |
+          set -o pipefail
+          mkdir -p build/deps
+          scripts/prepare-dep-source annotated-types
+          scripts/build-dep-package annotated-types --mode binary 2>&1 \
+            | tee build/deps/annotated-types-build.log
+
+      - name: Install python3-annotated-types
+        run: |
+          set -e
+          deb=$(ls build/deps/python3-annotated-types_*+noble1_*.deb \
+                | grep -v dbgsym | head -n1)
+          test -n "$deb"
+          sudo apt-get install -y --no-install-recommends "./$deb"
+
+      - name: Build pydantic-core
+        run: |
+          set -o pipefail
+          scripts/prepare-dep-source pydantic-core
+          scripts/build-dep-package pydantic-core --mode binary 2>&1 \
+            | tee build/deps/pydantic-core-build.log
+
+      - name: Install python3-pydantic-core
+        run: |
+          set -e
+          deb=$(ls build/deps/python3-pydantic-core_*~noble1_*.deb \
+                | grep -v dbgsym | head -n1)
+          test -n "$deb"
+          sudo apt-get install -y --no-install-recommends "./$deb"
+
+      - name: Build anyio
+        run: |
+          set -o pipefail
+          scripts/prepare-dep-source anyio
+          scripts/build-dep-package anyio --mode binary 2>&1 \
+            | tee build/deps/anyio-build.log
+
+      - name: Install python3-anyio
+        run: |
+          set -e
+          deb=$(ls build/deps/python3-anyio_*~noble1_*.deb \
+                | grep -v dbgsym | head -n1)
+          test -n "$deb"
+          sudo apt-get install -y --no-install-recommends "./$deb"
+
+      - name: Build pydantic
+        run: |
+          set -o pipefail
+          scripts/prepare-dep-source pydantic
+          scripts/build-dep-package pydantic --mode binary 2>&1 \
+            | tee build/deps/pydantic-build.log
+
+      - name: Install python3-pydantic
+        run: |
+          set -e
+          deb=$(ls build/deps/python3-pydantic_*~noble1_*.deb \
+                | grep -v dbgsym | head -n1)
+          test -n "$deb"
+          sudo apt-get install -y --no-install-recommends "./$deb"
+
+      - name: Build openai
+        run: |
+          set -o pipefail
+          scripts/prepare-dep-source openai
+          scripts/build-dep-package openai --mode binary 2>&1 \
+            | tee build/deps/openai-build.log
+
+      - name: Scan all chain build logs
+        run: |
+          set -e
+          for log in build/deps/annotated-types-build.log \
+                     build/deps/pydantic-core-build.log \
+                     build/deps/anyio-build.log \
+                     build/deps/pydantic-build.log \
+                     build/deps/openai-build.log; do
+              scripts/scan-build-log "$log"
+          done
+
+      - name: Lintian pydantic and openai
+        run: |
+          set -e
+          # Only the pypi-sdist binary builds get gated here; source
+          # .changes from earlier runs (none in CI, but glob safety)
+          # are filtered out. annotated-types/pydantic-core/anyio are
+          # already gated in the dep-build matrix; re-running lintian
+          # on them here would duplicate work.
+          for changes in build/deps/pydantic_*.changes \
+                         build/deps/openai_*.changes; do
+              case "$changes" in
+                  *_source.changes) continue ;;
+              esac
+              test -f "$changes"
+              lintian --pedantic --info --fail-on error,warning \
+                  "$changes"
+          done
