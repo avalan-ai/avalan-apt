@@ -151,3 +151,49 @@ def test_main_allow_flag_repeatable(
     # The two allowed lines must not show up in the failure report.
     assert "pip install jiter" not in captured.err
     assert "pip install httpx" not in captured.err
+
+
+def test_pybuild_internal_setup_py_install_is_allowed() -> None:
+    # pybuild reports the legacy install command it ran for sources
+    # that don't ship a PEP 517 backend (e.g. sid's google-auth, a
+    # debian-rebuild row we cannot patch). The scanner must let the
+    # diagnostic line and the matching deprecation warning through.
+    lines = [
+        "   dh_auto_install --destdir=debian/python3-google-auth/",
+        (
+            "I: pybuild base:311: /usr/bin/python3 setup.py install "
+            "--root /work/build/deps/python-google-auth-2.48.0/"
+            "debian/python3-google-auth"
+        ),
+        "running install",
+        (
+            "/usr/lib/python3/dist-packages/setuptools/_distutils/"
+            "cmd.py:66: SetuptoolsDeprecationWarning: setup.py install "
+            "is deprecated."
+        ),
+    ]
+    assert sbl.scan_lines(lines) == []
+
+
+def test_direct_setup_py_install_still_flagged() -> None:
+    # A debian/rules-driven setup.py install (no pybuild prefix) is
+    # still a hermeticity / packaging concern: dh_python3 wheel
+    # install is the supported path. Make sure the per-pattern allow
+    # list does not accidentally exempt this.
+    lines = ["+ /usr/bin/python3 setup.py install --prefix=/usr"]
+    hits = sbl.scan_lines(lines)
+    assert len(hits) == 1
+    assert "setup.py install" in hits[0].description
+
+
+def test_pybuild_prefix_does_not_mask_pip_install() -> None:
+    # The pybuild exception is scoped to the setup.py install pattern.
+    # A line whose pybuild-prefixed payload mentions a pip install
+    # must still be reported (this should never happen in practice,
+    # but the exception list is narrow by design).
+    lines = [
+        "I: pybuild base:311: /usr/bin/python3 -m pip install foo"
+    ]
+    hits = sbl.scan_lines(lines)
+    assert len(hits) == 1
+    assert "pip install" in hits[0].description

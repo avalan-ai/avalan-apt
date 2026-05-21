@@ -36,30 +36,61 @@ from pathlib import Path
 # Order matters: the first pattern to match wins, so more specific
 # patterns (``python -m pip install``) come before broader ones
 # (``pip install``).
-_FORBIDDEN_PATTERNS: tuple[tuple[str, str], ...] = (
+#
+# The optional third tuple element is a per-pattern allow list of
+# literal substrings. A line that matches the pattern AND contains one
+# of these substrings is permitted. Use this when a forbidden phrase
+# legitimately surfaces in a hermetic log as diagnostic output (e.g.
+# pybuild's own debug log line for its internal install step on a
+# debian-rebuild source we cannot patch).
+_FORBIDDEN_PATTERNS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
         r"\bpython3?\s+-m\s+pip\s+install\b",
         "python -m pip install (PyPI fetch at build time)",
+        (),
     ),
     (
         r"\bpip3?\s+install\b",
         "pip install (PyPI fetch at build time)",
+        (),
     ),
     (
         r"\beasy_install\b",
         "easy_install (deprecated PyPI installer)",
+        (),
     ),
     (
         r"\bsetup\.py\s+install\b",
         "setup.py install (bypasses dh_python3's wheel install)",
+        (
+            # pybuild's own diagnostic line describing the install
+            # command it ran internally. Some debian-rebuild sources
+            # (notably sid's python-google-auth) ship a setup.py-based
+            # build with no PEP 517 backend, so pybuild falls back to
+            # `setup.py install --root <destdir>`. The work stays
+            # offline; the line is just pybuild reporting what it did.
+            # APT.md forbids patching debian-rebuild sources, so the
+            # legacy install path is out of our hands for those rows.
+            "I: pybuild ",
+            # setuptools' deprecation warning that always follows the
+            # legacy install call. The actual command line is logged
+            # separately; if it came from debian/rules instead of
+            # pybuild, that line would also match the pattern and
+            # would not carry "I: pybuild" -- so exempting the
+            # warning text alone does not weaken the gate.
+            "SetuptoolsDeprecationWarning: setup.py install is "
+            "deprecated",
+        ),
     ),
     (
         r"https?://(?:files\.|)pythonhosted\.org/",
         "direct pythonhosted.org fetch",
+        (),
     ),
     (
         r"https?://pypi\.org/",
         "direct pypi.org fetch",
+        (),
     ),
 )
 
@@ -75,10 +106,12 @@ class Hit:
         return f"{source}:{self.lineno}: [{self.description}] {self.text}"
 
 
-def _compile_patterns() -> tuple[tuple[re.Pattern[str], str], ...]:
+def _compile_patterns() -> tuple[
+    tuple[re.Pattern[str], str, tuple[str, ...]], ...
+]:
     return tuple(
-        (re.compile(pattern), description)
-        for pattern, description in _FORBIDDEN_PATTERNS
+        (re.compile(pattern), description, default_allow)
+        for pattern, description, default_allow in _FORBIDDEN_PATTERNS
     )
 
 
@@ -94,8 +127,10 @@ def scan_lines(
     """Return a list of forbidden-pattern hits in ``lines``.
 
     ``allow`` is a sequence of literal substrings that suppress a hit
-    when present on the same line. Use sparingly; the default with no
-    allowlist is the strict mode CI runs in.
+    when present on the same line, regardless of which pattern matched.
+    Use sparingly; the default with no allowlist is the strict mode CI
+    runs in. Patterns that ship with their own context-specific
+    exception lists (see ``_FORBIDDEN_PATTERNS``) layer below this.
     """
     compiled = _compile_patterns()
     hits: list[Hit] = []
@@ -103,17 +138,24 @@ def scan_lines(
         line = raw.rstrip("\n")
         if _line_is_allowed(line, allow):
             continue
-        for regex, description in compiled:
-            if regex.search(line):
-                hits.append(
-                    Hit(
-                        lineno=lineno,
-                        pattern=regex.pattern,
-                        description=description,
-                        text=line,
-                    )
-                )
+        for regex, description, default_allow in compiled:
+            if not regex.search(line):
+                continue
+            if _line_is_allowed(line, default_allow):
+                # The line matches this forbidden pattern but contains
+                # a per-pattern allowed substring. Stop the scan for
+                # this line so we don't double-report the same content
+                # against a broader pattern.
                 break
+            hits.append(
+                Hit(
+                    lineno=lineno,
+                    pattern=regex.pattern,
+                    description=description,
+                    text=line,
+                )
+            )
+            break
     return hits
 
 
