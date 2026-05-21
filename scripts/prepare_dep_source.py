@@ -46,6 +46,7 @@ class DepRow:
     debian_source_pkg: str
     debian_suite: str
     debian_version: str = ""
+    cargo_vendor: bool = False
 
 
 # Tail of a sdist URL: PyPI uses `<name>-<version>.tar.gz`; GitHub
@@ -71,6 +72,7 @@ def find_dep(map_path: Path, name: str) -> DepRow:
                 debian_source_pkg=entry.get("debian_source_pkg", ""),
                 debian_suite=entry.get("debian_suite", ""),
                 debian_version=entry.get("debian_version", ""),
+                cargo_vendor=bool(entry.get("cargo_vendor", False)),
             )
     raise LookupError(
         f"{name!r}: no [[dep]] row in {map_path}; expected one of "
@@ -191,7 +193,113 @@ def prepare_pypi_sdist(
             f"packages/{src_name}/debian/ before preparing this dep"
         )
     shutil.copytree(overlay, unpack_dir / "debian", dirs_exist_ok=False)
+    if dep.cargo_vendor:
+        cargo_vendor(unpack_dir)
     return unpack_dir
+
+
+# Vendor the crates under debian/ rather than at the project root.
+# Anything outside debian/ would land as "unrepresentable changes"
+# under dpkg-source's 3.0 (quilt) format and break the source-only
+# build mode that Launchpad consumes. The matching cargo registry
+# redirect lives in debian/rules' override_dh_auto_configure, so the
+# upstream .cargo/ tree stays untouched and the vendored path uses
+# $(CURDIR) at build time to dodge cargo's relative-to-config-file
+# path resolution.
+_CARGO_VENDOR_REL_DIR = "debian/vendor"
+
+
+def cargo_vendor(
+    source_dir: Path,
+    *,
+    runner=None,
+) -> None:
+    """Vendor the Cargo dependencies of ``source_dir`` for offline build.
+
+    Runs ``cargo vendor`` against the source tree's ``Cargo.toml`` /
+    ``Cargo.lock``, writing all transitive crate sources under
+    ``debian/vendor/``. The vendored tree lives under ``debian/`` so
+    dpkg-source's ``3.0 (quilt)`` format treats it as part of the
+    Debian packaging and not as an unrepresentable change to the
+    upstream tarball. Also write
+    ``debian/source/include-binaries`` listing every binary file under
+    ``debian/vendor/`` so ``3.0 (quilt)`` accepts the tree.
+
+    The matching cargo registry redirect is written by
+    ``debian/rules`` at build time; this helper does not touch the
+    upstream ``.cargo/config.toml``.
+
+    Vendoring happens at prepare time (network is allowed) so the
+    later ``dpkg-buildpackage`` step can stay hermetic.
+    """
+    if runner is None:
+        runner = subprocess.run
+    if shutil.which("cargo") is None:
+        raise EnvironmentError(
+            "cargo not on PATH; cargo_vendor=true rows require the "
+            "Noble cargo package. Run via scripts/dockerized-build "
+            "or install `cargo` on the host."
+        )
+    cargo_toml = source_dir / "Cargo.toml"
+    cargo_lock = source_dir / "Cargo.lock"
+    if not cargo_toml.is_file():
+        raise FileNotFoundError(
+            f"{cargo_toml} missing; cargo_vendor=true row but the "
+            f"upstream sdist has no Cargo.toml at the root"
+        )
+    if not cargo_lock.is_file():
+        raise FileNotFoundError(
+            f"{cargo_lock} missing; cargo vendor needs a Cargo.lock "
+            f"for deterministic resolution"
+        )
+    runner(
+        ["cargo", "vendor", "--locked", _CARGO_VENDOR_REL_DIR],
+        cwd=str(source_dir),
+        check=True,
+    )
+    _write_include_binaries(source_dir)
+
+
+def _looks_binary(path: Path, *, chunk: int = 4096) -> bool:
+    """Heuristic: a file is binary if its first chunk contains a NUL.
+
+    Mirrors what ``dpkg-source --before-build`` does when it decides
+    whether a file under ``debian/`` triggers the "unwanted binary
+    file" guardrail in ``3.0 (quilt)`` mode.
+    """
+    try:
+        with path.open("rb") as fh:
+            head = fh.read(chunk)
+    except OSError:
+        return False
+    return b"\x00" in head
+
+
+def _write_include_binaries(source_dir: Path) -> None:
+    """List every binary file under ``debian/vendor/`` in
+    ``debian/source/include-binaries``.
+
+    ``3.0 (quilt)`` rejects binary files under ``debian/`` unless they
+    are explicitly listed here. The vendored cargo registry contains
+    a handful of test-fixture binaries (regex-automata DFAs, fuzzer
+    crash inputs, ...) — list them so ``dpkg-source -b`` accepts the
+    tree as-is.
+    """
+    vendor = source_dir / _CARGO_VENDOR_REL_DIR
+    if not vendor.is_dir():
+        return
+    binaries: list[str] = []
+    for path in sorted(vendor.rglob("*")):
+        if not path.is_file():
+            continue
+        if not _looks_binary(path):
+            continue
+        binaries.append(str(path.relative_to(source_dir)))
+    if not binaries:
+        return
+    include_path = source_dir / "debian" / "source" / "include-binaries"
+    include_path.parent.mkdir(parents=True, exist_ok=True)
+    include_path.write_text("\n".join(binaries) + "\n")
 
 
 def debian_pool_url(source: str, version: str) -> str:

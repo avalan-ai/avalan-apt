@@ -27,6 +27,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
+        cargo \
         curl \
         cython3 \
         debhelper \
@@ -58,6 +59,7 @@ RUN apt-get update \
         python3-installer \
         python3-jwt \
         python3-markupsafe \
+        python3-maturin \
         python3-numpy \
         python3-openssl \
         python3-packaging \
@@ -86,6 +88,7 @@ RUN apt-get update \
         python3-sphinx-issues \
         python3-trio \
         quilt \
+        rustc \
         wget \
         xz-utils \
         zlib1g-dev \

@@ -1,0 +1,39 @@
+Source: pydantic-core
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ cargo,
+ python3-all,
+ python3-all-dev,
+ python3-maturin,
+ python3-setuptools,
+ python3-typing-extensions,
+ quilt,
+ rustc,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/pydantic/pydantic-core
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-pydantic-core
+Architecture: any
+Depends:
+ python3-typing-extensions (>= 4.6.1),
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
+Description: Core validation logic for pydantic (Avalan PPA pin)
+ pydantic-core is the Rust implementation of pydantic's validators
+ and serializers. The Avalan PPA ships 2.16.3 because Noble's archive
+ does not carry pydantic-core at all, and Debian sid's source
+ (2.46.3-1) requires librust-* crate versions Noble does not ship.
+ 2.16.3 still uses pyo3 0.20.2, which both Noble's rustc 1.75 and
+ python3-maturin 1.3.2 understand.
+ .
+ Built from the upstream PyPI sdist with cargo dependencies vendored
+ at prepare time so the dpkg-buildpackage step stays offline.

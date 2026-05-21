@@ -92,9 +92,10 @@ jobs:
       # Noble. Covers pypi-sdist overlays under packages/<dep>/ plus
       # the debian-rebuild rows whose sid Build-Depends resolve from
       # Noble alone (jinja2, google-auth). Rows whose build-deps need
-      # the Avalan PPA itself or a not-yet-packaged transitive
-      # (pydantic, openai) stay out of the matrix until those gaps
-      # close.
+      # the Avalan PPA itself (pydantic, openai) stay out of the
+      # matrix until that gap closes. pydantic-core is
+      # `cargo_vendor = true`, so the prep step runs `cargo vendor`
+      # (network-allowed) before the build step which stays offline.
       matrix:
         dep:
           - aioboto3
@@ -112,6 +113,7 @@ jobs:
           - huggingface-hub
           - jinja2
           - mcp
+          - pydantic-core
           - s3transfer
           - SQLAlchemy
           - typing-inspection
@@ -126,6 +128,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential \
             ca-certificates \
+            cargo \
             cython3 \
             debhelper \
             devscripts \
@@ -155,6 +158,7 @@ jobs:
             python3-installer \
             python3-jwt \
             python3-markupsafe \
+            python3-maturin \
             python3-numpy \
             python3-openssl \
             python3-packaging \
@@ -181,6 +185,7 @@ jobs:
             python3-sphinx-issues \
             python3-trio \
             quilt \
+            rustc \
             wget \
             xz-utils \
             zlib1g-dev

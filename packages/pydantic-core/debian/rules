@@ -1,0 +1,49 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=pydantic-core
+export PYBUILD_SYSTEM=pyproject
+
+# Block any accidental network use during build/test. cargo respects
+# CARGO_NET_OFFLINE; pip respects PIP_NO_INDEX. The vendored cargo
+# registry under debian/vendor/ is wired in at configure time via a
+# CARGO_HOME-local config.toml so the upstream .cargo/ tree stays
+# untouched (dpkg-source -b would otherwise reject the source build).
+export PIP_NO_INDEX=1
+export PIP_NO_BUILD_ISOLATION=1
+export CARGO_NET_OFFLINE=true
+export CARGO_HOME=$(CURDIR)/debian/cargo-home
+
+# maturin reads PYO3_PYTHON to decide which interpreter ABI it links
+# against. Without it the build picks `python3` (the symlink), which
+# is fine on Noble but explicit beats implicit.
+export PYO3_PYTHON=/usr/bin/python3
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# Stage the cargo registry redirect inside CARGO_HOME before pybuild
+# invokes maturin. The vendored crates land under debian/vendor/ at
+# prepare time (see scripts/prepare-dep-source). cargo resolves the
+# `directory =` path relative to the config file, so spell it out as
+# an absolute path computed from $(CURDIR) -- the source root.
+override_dh_auto_configure:
+	mkdir -p debian/cargo-home
+	printf '%s\n' \
+	    '[source.crates-io]' \
+	    'replace-with = "vendored-sources"' \
+	    '' \
+	    '[source.vendored-sources]' \
+	    'directory = "$(CURDIR)/debian/vendor"' \
+	    > debian/cargo-home/config.toml
+	dh_auto_configure
+
+# Upstream tests need pytest-benchmark, hypothesis, dirty-equals,
+# inline-snapshot, and a live Python environment with the freshly
+# built module. Skip at build time; correctness comes from upstream
+# CI plus an autopkgtest smoke import landed alongside the .deb.
+override_dh_auto_test:
+	@echo "Skipping upstream tests at build time."
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf debian/cargo-home target

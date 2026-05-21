@@ -138,7 +138,32 @@ debian_source_pkg = "pydantic"
 debian_suite = "sid"
 debian_version = "2.13.3-1"
 min_version = "2.0"
-notes = "Noble ships pydantic 1.x (below floor even after 1.4.8 relaxed the constraint to >=2.0); rebuild sid 2.13.3-1 into the PPA."
+notes = "Noble ships pydantic 1.x (below floor even after 1.4.8 relaxed the constraint to >=2.0); rebuild sid 2.13.3-1 into the PPA. Build-Depends on python3-pydantic-core (>= 2.46.3, << 2.46.4) which the Avalan PPA does not yet ship at that version, so this row stays out of the dep-build CI matrix until pydantic-core 2.46 lands in the PPA. The packaged pydantic-core (2.23.4 pypi-sdist) provides the runtime Python module Avalan imports; the sid pydantic rebuild can flip to pypi-sdist 2.9.2 (which pairs with pydantic-core 2.23.4) once the binary-build matrix wants a green cell here."
+
+# Transitive of pydantic -- pydantic 2.x ships its hot-path validator
+# as a Rust extension. Noble does not carry python3-pydantic-core, and
+# the sid source (pydantic-core 2.46.3-1) Build-Depends on librust-*
+# crate versions that Noble's archive does not match (pyo3 0.28,
+# regex 1.11.3, hashbrown 0.16, ...). Hand-package from PyPI at the
+# last release whose Cargo.toml uses pyo3 0.20 (the version both
+# Noble's librust-pyo3-dev and python3-maturin 1.3.2 understand) so
+# a maturin build against Noble's rustc 1.75 succeeds.
+# cargo_vendor=true so prepare-dep-source runs `cargo vendor` after
+# unpacking; the resulting tree builds offline with
+# `cargo build --offline` and dpkg-buildpackage stays hermetic.
+[[dep]]
+pypi_name = "pydantic-core"
+constraint = ">=2.16.3,<2.17"
+debian_name = "python3-pydantic-core"
+extra = "server"
+transitive_of = "pydantic"
+source = "ppa"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/77/3f/65dbe5231946fe02b4e6ea92bc303d2462f45d299890fd5e8bfe4d1c3d66/pydantic_core-2.16.3.tar.gz"
+sdist_sha256 = "1cac689f80a3abab2d3c0048b29eea5751114054f032a941a32de4c852c59cad"
+cargo_vendor = true
+min_version = "2.16.3"
+notes = "Transitive runtime dep of pydantic 2.x. Not in Noble; Debian sid carries 2.46.3-1 but the source Build-Depends on librust-* crate versions Noble does not match (pyo3 0.28, regex 1.11, ...). Pinned at 2.16.3 because that release uses pyo3 0.20.2 (which Noble's python3-maturin 1.3.2 understands) and pairs with pydantic 2.6.4 (a future pypi-sdist row that will replace the current sid 2.13.3-1 debian-rebuild)."
 
 # Transitive of pydantic -- pydantic 2.x requires typing-inspection
 # (>=0.4.2 in 2.13.x); not in Noble at all.

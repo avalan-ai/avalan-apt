@@ -236,6 +236,129 @@ def test_prepare_pypi_sdist_rejects_sha_mismatch(fake_repo: Path) -> None:
         pds.prepare_pypi_sdist(dep, fake_repo, fetcher=fake_fetch)
 
 
+def test_find_dep_reads_cargo_vendor_flag(fake_repo: Path) -> None:
+    map_path = fake_repo / "debian" / "dependency-map.toml"
+    map_path.write_text(
+        map_path.read_text().replace(
+            'sdist_url = "https://example.invalid/widget-1.2.3.tar.gz"',
+            'sdist_url = "https://example.invalid/widget-1.2.3.tar.gz"\n'
+            "cargo_vendor = true",
+        )
+    )
+    dep = pds.find_dep(map_path, "widget")
+    assert dep.cargo_vendor is True
+
+
+def test_prepare_pypi_sdist_runs_cargo_vendor_when_flagged(
+    fake_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Flag the row, build an sdist that ships a Cargo.toml + Cargo.lock
+    # so the helper's preconditions are satisfied, and stub `cargo` so
+    # the test doesn't shell out to a real Rust toolchain.
+    map_path = fake_repo / "debian" / "dependency-map.toml"
+    map_path.write_text(
+        map_path.read_text().replace(
+            'sdist_url = "https://example.invalid/widget-1.2.3.tar.gz"',
+            'sdist_url = "https://example.invalid/widget-1.2.3.tar.gz"\n'
+            "cargo_vendor = true",
+        )
+    )
+
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+        for name, payload in (
+            ("PKG-INFO", b"x\n"),
+            ("Cargo.toml", b'[package]\nname = "widget"\n'),
+            ("Cargo.lock", b'version = 3\n'),
+        ):
+            info = tarfile.TarInfo(name=f"widget-1.2.3/{name}")
+            info.size = len(payload)
+            tf.addfile(info, io.BytesIO(payload))
+    archive = buf.getvalue()
+    expected_sha = hashlib.sha256(archive).hexdigest()
+    _set_sha(map_path, expected_sha)
+
+    def fake_fetch(url: str, dest: Path, *, downloader: str = "wget"):
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(archive)
+
+    real_run = pds.subprocess.run
+    cargo_calls = []
+
+    def fake_run(cmd, *args, **kwargs):
+        if isinstance(cmd, list) and cmd[:2] == ["cargo", "vendor"]:
+            cargo_calls.append(cmd)
+            return type("_Proc", (), {"stdout": ""})()
+        return real_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(pds.shutil, "which", lambda _name: "/usr/bin/cargo")
+    monkeypatch.setattr(pds.subprocess, "run", fake_run)
+
+    dep = pds.find_dep(map_path, "widget")
+    out = pds.prepare_pypi_sdist(dep, fake_repo, fetcher=fake_fetch)
+
+    assert cargo_calls and cargo_calls[0][:2] == ["cargo", "vendor"]
+    assert "--locked" in cargo_calls[0]
+    # Target directory lands under debian/ so dpkg-source -b does not
+    # see vendored crates as "unrepresentable" changes to the orig
+    # tarball.
+    assert "debian/vendor" in cargo_calls[0]
+    # The upstream .cargo/config.toml stays untouched (dpkg-source -b
+    # would otherwise reject the local change); the cargo registry
+    # redirect is staged by debian/rules at build time.
+    assert not (out / ".cargo" / "config.toml").exists() or (
+        "vendored-sources"
+        not in (out / ".cargo" / "config.toml").read_text()
+    )
+
+
+def test_cargo_vendor_leaves_upstream_cargo_config_untouched(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    src = tmp_path / "tree"
+    src.mkdir()
+    (src / "Cargo.toml").write_text('[package]\nname = "w"\n')
+    (src / "Cargo.lock").write_text("version = 3\n")
+    (src / ".cargo").mkdir()
+    upstream_cargo = src / ".cargo" / "config.toml"
+    upstream_cargo.write_text("[build]\nrustflags = []\n")
+
+    def fake_runner(*args, **kwargs):
+        return type("_Proc", (), {"stdout": ""})()
+
+    monkeypatch.setattr(pds.shutil, "which", lambda _name: "/usr/bin/cargo")
+    monkeypatch.setattr(pds.subprocess, "run", fake_runner)
+
+    pds.cargo_vendor(src)
+    # Upstream .cargo/config.toml is left alone -- dpkg-source -b
+    # would otherwise refuse to bundle a `3.0 (quilt)` source with
+    # changes outside debian/.
+    assert upstream_cargo.read_text() == "[build]\nrustflags = []\n"
+    # Idempotent: a second prep against the same tree is a no-op.
+    pds.cargo_vendor(src)
+    assert upstream_cargo.read_text() == "[build]\nrustflags = []\n"
+
+
+def test_cargo_vendor_missing_cargo_raises(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    src = tmp_path / "tree"
+    src.mkdir()
+    monkeypatch.setattr(pds.shutil, "which", lambda _name: None)
+    with pytest.raises(EnvironmentError, match="cargo not on PATH"):
+        pds.cargo_vendor(src)
+
+
+def test_cargo_vendor_missing_cargo_toml_raises(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    src = tmp_path / "tree"
+    src.mkdir()
+    monkeypatch.setattr(pds.shutil, "which", lambda _name: "/usr/bin/cargo")
+    with pytest.raises(FileNotFoundError, match="Cargo.toml"):
+        pds.cargo_vendor(src)
+
+
 def test_prepare_pypi_sdist_requires_overlay(fake_repo: Path) -> None:
     archive = _make_sdist("widget-1.2.3")
     expected_sha = hashlib.sha256(archive).hexdigest()
