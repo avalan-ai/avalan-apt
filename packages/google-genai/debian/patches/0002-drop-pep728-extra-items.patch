@@ -1,0 +1,32 @@
+Description: Drop PEP 728 `extra_items=object` from DynamicAgentConfigParam
+ `google/genai/_interactions/types/dynamic_agent_config_param.py`
+ declares a `TypedDict` with `extra_items=object`, the PEP 728 keyword
+ argument that lets a `TypedDict` advertise an arbitrary-key shape to
+ static checkers. PEP 728 lands in Python 3.13 and in
+ typing-extensions 4.13; Noble ships typing-extensions 4.10, which
+ raises
+ `TypeError: _TypedDictMeta.__new__() got an unexpected keyword
+ argument 'extra_items'` at module import time and breaks every
+ downstream `from google import genai`.
+ .
+ The keyword is purely a type-checker hint — it has no runtime
+ semantics, and `TypedDict` already accepts arbitrary keys at runtime
+ — so dropping it leaves the runtime behaviour identical. The
+ trailing `# type: ignore[call-arg]` comment, originally there to
+ silence type checkers on Python releases below 3.13, becomes dead
+ weight and is removed alongside.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-21
+
+--- a/google/genai/_interactions/types/dynamic_agent_config_param.py
++++ b/google/genai/_interactions/types/dynamic_agent_config_param.py
+@@ -22,7 +22,7 @@
+ __all__ = ["DynamicAgentConfigParam"]
+
+
+-class DynamicAgentConfigParam(TypedDict, total=False, extra_items=object):  # type: ignore[call-arg]
++class DynamicAgentConfigParam(TypedDict, total=False):
+     """Configuration for dynamic agents."""
+
+     type: Required[Literal["dynamic"]]

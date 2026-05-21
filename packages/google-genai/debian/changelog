@@ -1,3 +1,26 @@
+google-genai (1.75.0-0ubuntu1~ppa1~noble2) noble; urgency=medium
+
+  * Soften the pydantic runtime floor from `>= 2.9.0` to `>= 2.6` in
+    both the pyproject patch and `debian/control`. The Avalan PPA's
+    pydantic is capped at 2.6.4 by Noble's rustc 1.75 / maturin 1.3.2
+    toolchain (which caps pydantic-core at 2.16.3); google-genai
+    reaches only `BaseModel`, `ConfigDict`, `Field`, `PrivateAttr`,
+    `model_validator`, `field_validator`, `ValidationError`,
+    `TypeAdapter`, `SerializeAsAny`, and the `alias_generators`
+    module — all stable since pydantic 2.4. Without this softening,
+    apt-get install of the Avalan chain failed with held-broken
+    packages.
+  * Ship a second quilt patch (drop-pep728-extra-items) that strips
+    `extra_items=object` from the `DynamicAgentConfigParam` TypedDict
+    declaration in `google/genai/_interactions/types/`. PEP 728 lands
+    in Python 3.13 / typing-extensions 4.13; Noble ships 4.10, which
+    raises `TypeError` at module import time with the keyword
+    present. The keyword is purely a type-checker hint and has no
+    runtime semantics, so dropping it leaves the runtime behaviour
+    identical.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Thu, 21 May 2026 18:00:00 -0300
+
 google-genai (1.75.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
 
   * Initial packaging of google-genai 1.75.0 for the Avalan PPA.

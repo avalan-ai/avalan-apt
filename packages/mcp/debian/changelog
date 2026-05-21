@@ -1,3 +1,17 @@
+mcp (1.27.1-0ubuntu1~ppa1~noble2) noble; urgency=medium
+
+  * Soften the pydantic runtime floor from `>= 2.11` to `>= 2.6` in both
+    the pyproject patch and `debian/control`. The Avalan PPA's pydantic
+    is capped at 2.6.4 by Noble's rustc 1.75 / maturin 1.3.2 toolchain
+    (which caps pydantic-core at 2.16.3); mcp's eagerly-loaded modules
+    reach only `BaseModel`, `ConfigDict`, `Field`, `RootModel`,
+    `AnyUrl`, `UrlConstraints`, `FileUrl`, `TypeAdapter`,
+    `validate_call`, and `ValidationError`, all stable since pydantic
+    2.0. Without this softening, apt-get install of the Avalan chain
+    failed with held-broken packages.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Thu, 21 May 2026 18:00:00 -0300
+
 mcp (1.27.1-0ubuntu1~ppa1~noble1) noble; urgency=medium
 
   * Initial packaging of mcp 1.27.1 for the Avalan PPA.
