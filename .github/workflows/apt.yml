@@ -190,6 +190,103 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  clean-build:
+    # Clean-room build via sbuild against a Noble chroot. Catches
+    # the class of bugs binary-build can't: Build-Depends that are
+    # only satisfied because of leftover packages on the runner
+    # image, network reaches in pybuild, etc. sbuild builds inside
+    # a freshly-created schroot whose only apt sources are Noble's
+    # main + universe -- if our Build-Depends list is wrong, or the
+    # source build wants something Noble doesn't carry, sbuild
+    # fails. Gates on push to main + nightly schedule +
+    # workflow_dispatch (per APT.md §9).
+    name: clean-build
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Check out avalan-apt
+        uses: actions/checkout@v4
+
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: clean-build-${{ hashFiles('.github/workflows/apt.yml') }}
+
+      - name: Install sbuild and friends
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+              ca-certificates \
+              debootstrap \
+              devscripts \
+              dpkg-dev \
+              sbuild \
+              schroot \
+              wget
+
+      - name: Cache Avalan sdist
+        uses: actions/cache@v4
+        with:
+          path: build/avalan_*.orig.tar.gz
+          key: avalan-sdist-${{ hashFiles('release.toml') }}
+
+      - name: Prepare upstream sdist
+        run: scripts/prepare-source
+
+      - name: Build source package (.dsc)
+        run: scripts/build-source
+
+      - name: Configure sbuild for the runner user
+        run: |
+          set -eux
+          # sbuild-adduser flips the runner user into the sbuild
+          # group and seeds an ~/.sbuildrc. The group change needs
+          # `sg sbuild -c` to take effect inside the same job.
+          sudo sbuild-adduser "$USER"
+          # Minimal ~/.sbuildrc -- sbuild complains without
+          # maintainer info, and the default mailto behaviour wants
+          # a smarthost we don't have on a CI runner.
+          cat > "$HOME/.sbuildrc" <<'EOF'
+          $maintainer_name = "Avalan Packaging Team <avalan@avalan.ai>";
+          $mailfrom = "Avalan Packaging Team <avalan@avalan.ai>";
+          $mailto = undef;
+          $build_log_keep_days = 1;
+          1;
+          EOF
+
+      - name: Create Noble amd64 schroot
+        run: |
+          set -eux
+          # --components=main,universe matches what `apt install
+          # avalan` users get on Noble. eatmydata is included for
+          # speed -- sbuild's chroot does a lot of dpkg fsyncs.
+          sudo sbuild-createchroot \
+              --include=eatmydata,ccache \
+              --components=main,universe \
+              noble \
+              /srv/chroot/noble-amd64-sbuild \
+              http://archive.ubuntu.com/ubuntu/
+
+      - name: Run sbuild against the .dsc
+        run: |
+          set -eux
+          dsc=$(ls build/avalan_*-*.dsc | head -n1)
+          test -n "$dsc"
+          # sg activates the sbuild group inside this shell only.
+          # --no-clean-source: we already produced the .dsc above;
+          # sbuild should consume it as-is, not rebuild from the
+          # working tree.
+          sg sbuild -c "sbuild --no-clean-source --dist=noble --arch=amd64 '$dsc' 2>&1 | tee build/sbuild.log"
+
+      - name: Upload sbuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-build-log
+          path: build/sbuild.log
+          if-no-files-found: warn
+          retention-days: 7
+
   dep-build:
     name: dep-build (${{ matrix.dep }})
     runs-on: ubuntu-24.04
