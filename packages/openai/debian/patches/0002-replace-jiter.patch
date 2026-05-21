@@ -1,0 +1,24 @@
+Description: Replace `jiter.from_json` with `pydantic_core.from_json`
+ The streaming chat completions helper imports `from_json` from jiter
+ at module load time, so the bare presence of the import is enough to
+ break `import openai` on a host that lacks jiter. jiter is a Rust
+ JSON accelerator that Noble does not package; pydantic_core (already
+ in the Avalan PPA) exposes the same `from_json` API and is a
+ perfectly adequate substitute for the OpenAI streaming-parse path.
+ Debian sid's python-openai ships the same substitution in its own
+ packaging; this is the Avalan-overlay equivalent.
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-21
+
+--- a/src/openai/lib/streaming/chat/_completions.py
++++ b/src/openai/lib/streaming/chat/_completions.py
+@@ -5,7 +5,7 @@
+ from typing import TYPE_CHECKING, Any, Generic, Callable, Iterable, Awaitable, AsyncIterator, cast
+ from typing_extensions import Self, Iterator, assert_never
+
+-from jiter import from_json
++from pydantic_core import from_json
+
+ from ._types import ParsedChoiceSnapshot, ParsedChatCompletionSnapshot, ParsedChatCompletionMessageSnapshot
+ from ._events import (

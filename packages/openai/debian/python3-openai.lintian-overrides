@@ -1,0 +1,5 @@
+# Upstream ships an `openai` console_scripts entry point but no
+# manpage. The CLI surface is documented via `openai --help` and
+# the upstream README; writing a derived manpage would drift from
+# upstream on every version bump.
+no-manual-page [usr/bin/openai]

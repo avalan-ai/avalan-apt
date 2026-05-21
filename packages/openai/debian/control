@@ -1,0 +1,53 @@
+Source: openai
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-anyio (>= 4.5),
+ python3-distro,
+ python3-hatch-fancy-pypi-readme,
+ python3-hatchling,
+ python3-httpx,
+ python3-pydantic (>= 2.0),
+ python3-pydantic-core (>= 2.16.3),
+ python3-sniffio,
+ python3-tqdm,
+ python3-typing-extensions,
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/openai/openai-python
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-openai
+Architecture: all
+Depends:
+ python3-anyio (>= 4.5),
+ python3-distro,
+ python3-httpx,
+ python3-pydantic (>= 2.0),
+ python3-pydantic-core (>= 2.16.3),
+ python3-sniffio,
+ python3-tqdm,
+ python3-typing-extensions,
+ ${misc:Depends},
+ ${python3:Depends},
+Description: official Python client for the OpenAI API (Avalan PPA pin)
+ The openai SDK exposes typed Python bindings for the OpenAI REST API
+ plus sync and async clients backed by httpx, streaming helpers, and
+ tool-call utilities. Avalan ships it in its `vendors` extra at
+ `>= 2.0, < 3`; Debian sid carries 2.21.x but its source Build-Depends
+ on Noble-missing transitive deps, so the rebuild pins the upstream
+ PyPI sdist instead.
+ .
+ The optional `jiter` Rust accelerator is intentionally not declared
+ as a Depends. The streaming chat-completion helper imports
+ `from_json` at module-load time, so the upstream import is rewritten
+ to pull `from_json` from `pydantic_core` (already in this PPA), which
+ ships the same API. The HTTP / completion paths Avalan exercises do
+ not need jiter to function.

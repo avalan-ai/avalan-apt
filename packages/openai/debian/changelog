@@ -1,0 +1,28 @@
+openai (2.21.0-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of openai 2.21.0 for the Avalan PPA.
+  * Flipped from debian-rebuild sid 2.21.0-1 to pypi-sdist because
+    Noble's python3-hatchling 1.21.0 refuses the upstream
+    `Programming Language :: Python :: 3.14` trove classifier, and per
+    APT.md the rebuild rows ship sid's source unchanged. The
+    Avalan-side overlay carries one quilt patch
+    (pyproject-for-noble) that does three things:
+      - relax the strict `hatchling==1.26.3` build pin to
+        `hatchling>=1.21` (Noble ships 1.21.0);
+      - rewrite the PEP 639 `license = "Apache-2.0"` SPDX string to
+        the legacy `license = { file = "LICENSE" }` table form, the
+        Noble-hatchling workaround the rest of the per-dep tree uses;
+      - drop the Python 3.14 trove classifier (Noble's hatchling
+        rejects it as unknown);
+      - soften the `typing-extensions >= 4.11` floor to
+        `>= 4.10` (Noble ships 4.10.0). openai uses only API stable
+        since typing-extensions 4.5;
+      - drop `jiter` from install_requires. jiter is a Rust JSON
+        accelerator that Noble does not ship; the only consumer is
+        the streaming chat-completion helper which imports
+        `from_json` at module load. A second quilt patch
+        (replace-jiter) rewrites that import to pull `from_json`
+        from `pydantic_core`, mirroring what Debian sid does in its
+        own python-openai.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Thu, 21 May 2026 16:00:00 -0300

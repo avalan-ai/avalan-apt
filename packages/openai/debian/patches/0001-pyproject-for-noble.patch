@@ -1,0 +1,73 @@
+Description: Soften pyproject for Noble + drop the Rust jiter dep
+ Four metadata tweaks bundled into one patch because they share the
+ same goal -- making openai 2.21.0 build against Noble's archive:
+ .
+ * Rewrite the PEP 639 SPDX string `license = "Apache-2.0"` to the
+   legacy `license = { file = "LICENSE" }` table form Noble's
+   python3-hatchling 1.21.0 accepts (same workaround anyio, anthropic,
+   google-genai use).
+ * Drop the `Programming Language :: Python :: 3.14` trove classifier.
+   Noble's hatchling classifier table predates Python 3.14 and refuses
+   to emit the wheel until the unknown entry is removed. Purely
+   informational; no runtime impact.
+ * Relax the strict `hatchling==1.26.3` build pin to
+   `hatchling>=1.21`. Noble ships python3-hatchling 1.21.0; the
+   metadata openai uses works on both 1.21 and 1.26.
+ * Soften the `typing-extensions >= 4.11` runtime floor to `>= 4.10`.
+   Noble ships typing-extensions 4.10.0 in main; the API surface
+   openai relies on (`override`, `Literal`, `TypedDict`, `Self`,
+   `assert_never`, `Iterator`, `ParamSpec`, ...) is stable since
+   typing-extensions 4.5. The 4.11 floor is CI overhead rather than a
+   real runtime API requirement.
+ * Drop the `jiter>=0.10.0, <1` install requirement. jiter is a Rust
+   JSON accelerator that Noble does not ship; the only top-level
+   `from jiter import from_json` lives in the streaming chat
+   completions helper and is rewritten by patch 0002 to pull
+   `from_json` from `pydantic_core` instead (which ships the same
+   API and is already in the Avalan PPA).
+Author: Avalan Packaging Team <avalan@avalan.ai>
+Forwarded: not-needed
+Last-Update: 2026-05-21
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -3,7 +3,7 @@
+ version = "2.21.0"
+ description = "The official Python library for the openai API"
+ dynamic = ["readme"]
+-license = "Apache-2.0"
++license = { file = "LICENSE" }
+ authors = [
+ { name = "OpenAI", email = "support@openai.com" },
+ ]
+@@ -11,12 +11,11 @@ authors = [
+ dependencies = [
+   "httpx>=0.23.0, <1",
+   "pydantic>=1.9.0, <3",
+-    "typing-extensions>=4.11, <5",
++    "typing-extensions>=4.10, <5",
+   "anyio>=3.5.0, <5",
+   "distro>=1.7.0, <2",
+   "sniffio",
+     "tqdm > 4",
+-    "jiter>=0.10.0, <1",
+ ]
+
+ requires-python = ">= 3.9"
+@@ -28,7 +27,6 @@ classifiers = [
+   "Programming Language :: Python :: 3.11",
+   "Programming Language :: Python :: 3.12",
+   "Programming Language :: Python :: 3.13",
+-  "Programming Language :: Python :: 3.14",
+   "Operating System :: OS Independent",
+   "Operating System :: POSIX",
+   "Operating System :: MacOS",
+@@ -106,7 +104,7 @@ pythonpath = ["src"]
+ "typecheck:mypy" = "mypy ."
+
+ [build-system]
+-requires = ["hatchling==1.26.3", "hatch-fancy-pypi-readme"]
++requires = ["hatchling>=1.21", "hatch-fancy-pypi-readme"]
+ build-backend = "hatchling.build"
+
+ [tool.hatch.build]
