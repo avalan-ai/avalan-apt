@@ -133,12 +133,11 @@ constraint = ">=2.0,<3.0.0"
 debian_name = "python3-pydantic"
 extra = "server"
 source = "ppa"
-provenance = "debian-rebuild"
-debian_source_pkg = "pydantic"
-debian_suite = "sid"
-debian_version = "2.13.3-1"
+provenance = "pypi-sdist"
+sdist_url = "https://files.pythonhosted.org/packages/4b/de/38b517edac45dd022e5d139aef06f9be4762ec2e16e2b14e1634ba28886b/pydantic-2.6.4.tar.gz"
+sdist_sha256 = "b1704e0847db01817624a6b86766967f552dd9dbf3afba4004409f908dcc84e6"
 min_version = "2.0"
-notes = "Noble ships pydantic 1.x (below floor even after 1.4.8 relaxed the constraint to >=2.0); rebuild sid 2.13.3-1 into the PPA. Build-Depends on python3-pydantic-core (>= 2.46.3, << 2.46.4) which the Avalan PPA does not yet ship at that version, so this row stays out of the dep-build CI matrix until pydantic-core 2.46 lands in the PPA. The packaged pydantic-core (2.23.4 pypi-sdist) provides the runtime Python module Avalan imports; the sid pydantic rebuild can flip to pypi-sdist 2.9.2 (which pairs with pydantic-core 2.23.4) once the binary-build matrix wants a green cell here."
+notes = "Noble ships pydantic 1.x (below floor even after 1.4.8 relaxed the constraint to >=2.0). Flipped from debian-rebuild sid 2.13.3-1 to pypi-sdist 2.6.4 because the sid source Build-Depends on python3-pydantic-core (>= 2.46.3, << 2.46.4) and Noble's archive lacks the librust-* crate versions sid's pydantic-core needs; the Avalan PPA carries pydantic-core 2.16.3. Pydantic 2.6.4 hard-pins `pydantic-core == 2.16.3` so the two rows lock-step. 2.6.4 still requires only annotated-types and typing-extensions on top of pydantic-core; typing-inspection enters pydantic's runtime deps in 2.10+."
 
 # Transitive of pydantic -- pydantic 2.x ships its hot-path validator
 # as a Rust extension. Noble does not carry python3-pydantic-core, and
@@ -163,7 +162,7 @@ sdist_url = "https://files.pythonhosted.org/packages/77/3f/65dbe5231946fe02b4e6e
 sdist_sha256 = "1cac689f80a3abab2d3c0048b29eea5751114054f032a941a32de4c852c59cad"
 cargo_vendor = true
 min_version = "2.16.3"
-notes = "Transitive runtime dep of pydantic 2.x. Not in Noble; Debian sid carries 2.46.3-1 but the source Build-Depends on librust-* crate versions Noble does not match (pyo3 0.28, regex 1.11, ...). Pinned at 2.16.3 because that release uses pyo3 0.20.2 (which Noble's python3-maturin 1.3.2 understands) and pairs with pydantic 2.6.4 (a future pypi-sdist row that will replace the current sid 2.13.3-1 debian-rebuild)."
+notes = "Transitive runtime dep of pydantic 2.x. Not in Noble; Debian sid carries 2.46.3-1 but the source Build-Depends on librust-* crate versions Noble does not match (pyo3 0.28, regex 1.11, ...). Pinned at 2.16.3 because that release uses pyo3 0.20.2 (which Noble's python3-maturin 1.3.2 understands) and pairs with pydantic 2.6.4 (the pypi-sdist row that replaced the prior sid 2.13.3-1 debian-rebuild)."
 
 # Transitive of pydantic -- pydantic 2.6.4 requires annotated-types
 # (>= 0.4.0); not in Noble at all. Debian sid carries 0.7.0-1 whose
@@ -183,8 +182,10 @@ debian_version = "0.7.0-1"
 min_version = "0.4.0"
 notes = "Transitive runtime dep of pydantic 2.6.4 (annotated-types >= 0.4.0). Not in Noble or older Debian releases; sid 0.7.0-1 builds cleanly against Noble's hatchling and pytest, no Avalan-side patches required."
 
-# Transitive of pydantic -- pydantic 2.x requires typing-inspection
-# (>=0.4.2 in 2.13.x); not in Noble at all.
+# Transitive of pydantic -- typing-inspection enters pydantic's
+# runtime deps in 2.10+; pydantic 2.6.4 does not need it. Keep the
+# row because the PPA already ships 0.4.2 and other future deps may
+# pull it in; remove the row when no other dep requires it.
 [[dep]]
 pypi_name = "typing-inspection"
 constraint = ">=0.4.2"
@@ -196,7 +197,7 @@ provenance = "pypi-sdist"
 sdist_url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz"
 sdist_sha256 = "ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"
 min_version = "0.4.2"
-notes = "Transitive runtime dep of pydantic 2.x. Not in Debian; pin 0.4.2 sdist. typing-extensions from Noble satisfies its sole runtime dep."
+notes = "Future-transitive of pydantic (>= 2.10 lists it as a runtime dep; pydantic 2.6.4 does not, but the row stays because the PPA already ships 0.4.2 and reverting it is more churn than leaving it). typing-extensions from Noble satisfies its sole runtime dep."
 
 [[dep]]
 pypi_name = "uvicorn"

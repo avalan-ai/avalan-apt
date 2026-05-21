@@ -1,0 +1,16 @@
+pydantic (2.6.4-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * Initial packaging of pydantic 2.6.4 for the Avalan PPA.
+  * Replaces the prior debian-rebuild row at sid 2.13.3-1, whose
+    Build-Depends on python3-pydantic-core (>= 2.46.3, << 2.46.4)
+    cannot be satisfied: Noble's archive lacks librust-* crate
+    versions sid's pydantic-core 2.46 requires, and the Avalan PPA
+    carries pydantic-core 2.16.3 (pinned because that release uses
+    pyo3 0.20.2, the version Noble's maturin 1.3.2 understands).
+  * 2.6.4 hard-pins `pydantic-core == 2.16.3` upstream, so the two
+    rows now lock-step.
+  * Runtime deps: annotated-types (>= 0.4.0), typing-extensions
+    (>= 4.6.1), pydantic-core (== 2.16.3) -- the first via a new
+    debian-rebuild row in dependency-map.toml.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Thu, 21 May 2026 14:00:00 -0300

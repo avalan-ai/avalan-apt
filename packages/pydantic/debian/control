@@ -1,0 +1,38 @@
+Source: pydantic
+Section: python
+Priority: optional
+Maintainer: Avalan Packaging Team <avalan@avalan.ai>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-annotated-types,
+ python3-hatch-fancy-pypi-readme,
+ python3-hatchling,
+ python3-pydantic-core (>= 2.16.3),
+ python3-pydantic-core (<< 2.17),
+ python3-typing-extensions (>= 4.6.1),
+ quilt,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/pydantic/pydantic
+Vcs-Browser: https://github.com/avalan-ai/avalan-apt
+Vcs-Git: https://github.com/avalan-ai/avalan-apt.git
+
+Package: python3-pydantic
+Architecture: all
+Depends:
+ python3-annotated-types (>= 0.4.0),
+ python3-pydantic-core (>= 2.16.3),
+ python3-pydantic-core (<< 2.17),
+ python3-typing-extensions (>= 4.6.1),
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Data validation using Python type hints (Avalan PPA pin)
+ Pydantic is a data validation library that uses Python type hints
+ to perform runtime parsing and validation. The Avalan PPA ships
+ pydantic 2.6.4 because Noble carries pydantic 1.x (below Avalan's
+ floor) and Debian sid's pydantic 2.13.x Build-Depends on a
+ pydantic-core version Noble's archive cannot supply. 2.6.4 pairs
+ lock-step with pydantic-core 2.16.3 (also in this PPA).
