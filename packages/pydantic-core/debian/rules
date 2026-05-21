@@ -18,6 +18,17 @@ export CARGO_HOME=$(CURDIR)/debian/cargo-home
 # is fine on Noble but explicit beats implicit.
 export PYO3_PYTHON=/usr/bin/python3
 
+# Pin cargo/rustc to Noble's archive binaries. GitHub's ubuntu-24.04
+# runner image bundles a rustup-managed toolchain whose `cargo` and
+# `rustc` shims sit ahead of /usr/bin on PATH and refuse to run
+# without a default toolchain configured; the apt-installed pair
+# under /usr/bin/ is the one we want regardless of host. Prepend
+# /usr/bin to PATH so `cargo` -> the Noble package, and also export
+# the CARGO/RUSTC env vars that maturin and pyo3 honor.
+export PATH := /usr/bin:$(PATH)
+export CARGO = /usr/bin/cargo
+export RUSTC = /usr/bin/rustc
+
 %:
 	dh $@ --buildsystem=pybuild
 
