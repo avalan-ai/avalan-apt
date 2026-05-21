@@ -215,11 +215,29 @@ jobs:
       - name: Install sbuild and friends
         run: |
           sudo apt-get update
+          # The Avalan source package's Build-Depends needs to be
+          # installable on the runner for `dpkg-buildpackage -S` to
+          # succeed; sbuild itself only reinstalls them inside its
+          # chroot, but the source-build step here runs on the host.
+          # Keeping the runner install list aligned with binary-build
+          # avoids "Unmet build dependencies" at `scripts/build-source`.
           sudo apt-get install -y --no-install-recommends \
+              build-essential \
               ca-certificates \
+              debhelper \
               debootstrap \
               devscripts \
+              dh-python \
               dpkg-dev \
+              fakeroot \
+              pybuild-plugin-pyproject \
+              python3-all \
+              python3-all-dev \
+              python3-build \
+              python3-installer \
+              python3-poetry-core \
+              python3-poetry-dynamic-versioning \
+              python3-pytest \
               sbuild \
               schroot \
               wget
