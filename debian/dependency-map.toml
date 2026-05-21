@@ -34,29 +34,17 @@ constraint = ">=24.0,<27.0"
 debian_name = "python3-packaging"
 extra = "base"
 source = "noble"
-min_version = "24.0"
-notes = "Noble ships 24.0-1, exactly the new floor. 1.4.8 widened the ceiling to <27.0 so the rebuild we used to need is no longer required."
-
-[[dep]]
-pypi_name = "humanize"
-constraint = ">=4.12.3,<5.0.0"
-debian_name = "python3-humanize"
-extra = "base"
-source = "ppa"
-provenance = "pypi-sdist"
-sdist_url = "https://files.pythonhosted.org/packages/22/d1/bbc4d251187a43f69844f7fd8941426549bbe4723e8ff0a7441796b0789f/humanize-4.12.3.tar.gz"
-sdist_sha256 = "8430be3a615106fdfceb0b2c1b41c4c98c6b0fc5cc59663a5539b111dd325fb0"
-min_version = "4.12.3"
-notes = "Noble ships 4.9.0 and Debian sid ships 4.12.1 (both below floor); pin 4.12.3 sdist."
+min_version = "99.0"
+notes = "INTENTIONAL CI-BREAK: min_version bumped to 99.0 to force the audit's noble-version comparison to flag 'below floor'."
 
 [[dep]]
 pypi_name = "rich"
 constraint = ">=13.7.0,<16.0.0"
 debian_name = "python3-rich"
 extra = "base"
-source = "noble"
+source = "unknown"
 min_version = "13.7.0"
-notes = "Noble ships 13.7.1-1, exactly inside the widened 1.4.8 range (>=13.7.0,<16.0.0)."
+notes = "INTENTIONAL CI-BREAK: source flipped to 'unknown' to force the audit's unknown-row check to fire."
 
 # --- Extra `agent` ----------------------------------------------------------
 

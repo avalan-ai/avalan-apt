@@ -11,6 +11,9 @@ export PIP_NO_BUILD_ISOLATION=1
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 %:
+	# INTENTIONAL CI-BREAK: pip install should be flagged by
+	# scripts/scan-build-log.
+	pip install --dry-run six || true
 	dh $@ --buildsystem=pybuild
 
 # Force every top-level `version = "..."` literal in pyproject.toml to
