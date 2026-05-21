@@ -1,0 +1,54 @@
+# Reusable apt cache restore for the apt workflow's jobs.
+#
+# /var/cache/apt/archives is owned by `_apt:_apt` (apt refuses to use
+# it otherwise), but actions/cache@v4 extracts as the runner user.
+# That ownership mismatch is the reason apt caching can't be a single
+# bare `actions/cache@v4` step -- a follow-up `chown` step has to run
+# every time before the next `apt-get` invocation, and the path glob
+# is intentionally narrowed to `*.deb` so the cache action never
+# touches apt's `partial/` subdir (0700, _apt-owned -- not readable
+# by the runner the cache action runs as).
+#
+# Inputs:
+#   key: cache key suffix. Callers usually pass `github.job` plus a
+#        hashFiles() of the workflow file so the cache invalidates
+#        when the apt-get install list changes. All matrix cells of a
+#        single job share one key on purpose -- they install the same
+#        superset of host tools, so a single cached archive serves
+#        every cell.
+
+name: Cache apt archives
+description: Persist downloaded .debs across CI runs and restore _apt ownership for the next apt-get.
+
+inputs:
+  key:
+    description: Cache key suffix (typically `github.job` + a workflow hash).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Loosen archives perms so the runner can read the .deb tree
+      shell: bash
+      run: |
+        sudo mkdir -p /var/cache/apt/archives
+        sudo chmod a+rX /var/cache/apt/archives
+        sudo find /var/cache/apt/archives -maxdepth 1 -name '*.deb' \
+          -exec chmod a+r {} +
+
+    - name: Restore .deb archives cache
+      uses: actions/cache@v4
+      with:
+        # Only the leaf .deb files -- skip /var/cache/apt/archives
+        # itself plus the 0700 `partial/` subdir the cache action's
+        # tar step (running as the runner user) can't descend into.
+        path: /var/cache/apt/archives/*.deb
+        key: noble-apt-${{ inputs.key }}
+
+    - name: Restore _apt ownership on cached .debs
+      shell: bash
+      run: |
+        sudo chown -R _apt:root /var/cache/apt/archives
+        sudo mkdir -p /var/cache/apt/archives/partial
+        sudo chown _apt:root /var/cache/apt/archives/partial
+        sudo chmod 0700 /var/cache/apt/archives/partial

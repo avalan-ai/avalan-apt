@@ -31,6 +31,11 @@ jobs:
       - name: Place homebrew-avalan at the path check-dependencies expects
         run: mv homebrew-avalan-checkout ../homebrew-avalan
 
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: dependency-audit-${{ hashFiles('.github/workflows/apt.yml') }}
+
       - name: Install host tools
         run: |
           sudo apt-get update
@@ -57,6 +62,11 @@ jobs:
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
+
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: metadata-lint-${{ hashFiles('.github/workflows/apt.yml') }}
 
       - name: Install host tools
         run: |
@@ -106,6 +116,11 @@ jobs:
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
+
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: binary-build-${{ hashFiles('.github/workflows/apt.yml') }}
 
       - name: Install host tools
         run: |
@@ -212,6 +227,11 @@ jobs:
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
+
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: dep-build-${{ hashFiles('.github/workflows/apt.yml') }}
 
       - name: Install host tools
         run: |
@@ -357,6 +377,11 @@ jobs:
     steps:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
+
+      - name: Cache apt archives
+        uses: ./.github/actions/cache-apt
+        with:
+          key: dep-build-chain-${{ hashFiles('.github/workflows/apt.yml') }}
 
       - name: Install host tools
         run: |
