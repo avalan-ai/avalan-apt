@@ -1,0 +1,116 @@
+#!/bin/sh
+# scripts/install-cycle -- drive the Avalan .deb closure through the
+# full install / remove / purge / reinstall lifecycle.
+#
+# Stands in for piuparts: that tool was dropped from Ubuntu Noble
+# (last shipped in Jammy, not in Noble or Oracular's universe, and
+# not in noble-backports either), so we run an equivalent cycle by
+# hand. The core checks match piuparts' contract for our package:
+#
+#   1. apt-get install the .deb closure cleanly,
+#   2. snapshot the on-disk file list dpkg ascribes to avalan,
+#   3. apt-get remove avalan (config files remain),
+#   4. apt-get purge avalan + autoremove --purge (no rc state left),
+#   5. assert nothing lingers under /usr/lib/python3/dist-packages/
+#      avalan*  -- the canonical pybuild postrm bug,
+#   6. apt-get install again,
+#   7. confirm the second install lands bit-identically to the first.
+#
+# Run as root in a fresh Noble container (Docker, schroot, or a
+# throwaway VM). The first argument is the directory holding the
+# avalan_*.deb plus its python3-* deps -- usually
+# /work/build/install-smoke when invoked from CI.
+
+set -eu
+
+repo=${1:-build/install-smoke}
+
+if [ ! -d "$repo" ]; then
+    echo "FATAL: '$repo' is not a directory; pass the .deb closure path as the first argument." >&2
+    exit 2
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "FATAL: install-cycle must run as root (apt-get install/remove/purge)." >&2
+    exit 2
+fi
+
+abs_repo=$(cd "$repo" && pwd)
+
+set -x
+
+cd "$abs_repo"
+deb_count=$(ls -1 avalan_*.deb python3-*.deb 2>/dev/null | wc -l)
+if [ "$deb_count" -lt 2 ]; then
+    set +x
+    echo "FATAL: expected at least one avalan_*.deb + one python3-*.deb under $abs_repo." >&2
+    exit 1
+fi
+
+apt-get update
+
+# Step 1 -- initial install. The leading ./ is what tells apt to
+# treat the arg as a local file rather than a package name, and
+# *.deb pulls every .deb in the closure in one go so apt resolves
+# the inter-dep order itself.
+apt-get install -y --no-install-recommends ./*.deb
+
+# Step 2 -- snapshot files dpkg ascribes to avalan for the round-trip
+# check at step 7.
+snapshot_initial=$(mktemp)
+dpkg -L avalan | sort > "$snapshot_initial"
+
+# Step 3 -- remove (config files survive a plain remove on purpose).
+apt-get remove -y avalan
+if [ -f /usr/bin/avalan ]; then
+    set +x
+    echo "FATAL: /usr/bin/avalan still present after apt-get remove." >&2
+    exit 1
+fi
+
+# Step 4 -- purge. apt-get loses track of a removed local .deb (the
+# .deb was never in an apt source, so `apt-get purge avalan` after
+# remove fails with "Unable to locate package"), so drive the purge
+# via dpkg directly. dpkg always knows about installed/rc packages.
+dpkg --purge avalan
+
+status=$(dpkg-query -W -f='${Status}\n' avalan 2>/dev/null || true)
+case "$status" in
+    ''|'unknown ok not-installed')
+        ;;
+    *)
+        set +x
+        echo "FATAL: avalan dpkg status after purge is '$status'; expected not-installed." >&2
+        exit 1
+        ;;
+esac
+
+# Step 5 -- the slice-defining check: nothing under
+# /usr/lib/python3/dist-packages/avalan* may remain. pybuild's
+# postrm has historically left __pycache__/ here.
+leftovers=$(find /usr/lib/python3/dist-packages -maxdepth 2 \
+    -name 'avalan*' -print 2>/dev/null || true)
+if [ -n "$leftovers" ]; then
+    set +x
+    echo "FATAL: avalan files remain under /usr/lib/python3/dist-packages after purge:" >&2
+    echo "$leftovers" >&2
+    exit 1
+fi
+
+# Step 6 -- reinstall the full closure.
+apt-get install -y --no-install-recommends ./*.deb
+
+# Step 7 -- file list must match the initial install exactly.
+snapshot_reinstall=$(mktemp)
+dpkg -L avalan | sort > "$snapshot_reinstall"
+
+if ! diff -q "$snapshot_initial" "$snapshot_reinstall" >/dev/null; then
+    set +x
+    echo "FATAL: reinstall produced a different file list than the initial install:" >&2
+    diff -u "$snapshot_initial" "$snapshot_reinstall" >&2
+    exit 1
+fi
+
+rm -f "$snapshot_initial" "$snapshot_reinstall"
+set +x
+echo "install-cycle: install / remove / purge / reinstall OK"

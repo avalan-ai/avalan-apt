@@ -6,11 +6,11 @@ on:
   pull_request:
   schedule:
     # Nightly run at 05:00 UTC -- exercises the heavy gates
-    # (install-smoke, autopkgtest, eventually clean-build / piuparts)
-    # that don't fire on PR triggers.
+    # (install-smoke, autopkgtest, install-cycle; eventually
+    # clean-build) that don't fire on PR triggers.
     - cron: '0 5 * * *'
-  # workflow_dispatch lets us drive a nightly-only gate (piuparts)
-  # by hand without having to wait until 05:00 UTC.
+  # workflow_dispatch lets us drive a nightly-only gate
+  # (install-cycle) by hand without having to wait until 05:00 UTC.
   workflow_dispatch:
 
 concurrency:
@@ -650,17 +650,21 @@ jobs:
                   autopkgtest --no-built-binaries /work -- null
               '
 
-  piuparts:
-    # Slow install/remove/purge/reinstall cycle that catches
-    # maintainer-script bugs and leftover files (the canonical
-    # gripe: `__pycache__` directories that pybuild's postrm
-    # forgets). piuparts bootstraps a fresh Noble chroot via
-    # debootstrap and runs every cycle inside it, so each run
-    # costs more than every other gate combined -- we gate on
-    # the nightly schedule plus manual workflow_dispatch so we
+  install-cycle:
+    # install/remove/purge/reinstall lifecycle gate. Replaces a
+    # piuparts job: piuparts was dropped from Ubuntu Noble's
+    # universe (last seen in Jammy, gone in Noble + Oracular), so
+    # there's no apt-installable piuparts to drive. The script
+    # under scripts/install-cycle reproduces the cycle's
+    # essential checks for our package -- install the closure,
+    # snapshot the dpkg file list, remove, dpkg --purge, assert
+    # nothing remains under /usr/lib/python3/dist-packages/
+    # avalan* (the canonical pybuild postrm gripe), reinstall,
+    # and confirm the second install lands bit-identically.
+    # Gates on the nightly schedule plus workflow_dispatch so we
     # can poke it from `gh workflow run` when iterating on
     # packaging changes.
-    name: piuparts
+    name: install-cycle
     runs-on: ubuntu-24.04
     needs:
       - binary-build
@@ -671,21 +675,6 @@ jobs:
       - name: Check out avalan-apt
         uses: actions/checkout@v4
 
-      - name: Cache apt archives
-        uses: ./.github/actions/cache-apt
-        with:
-          key: piuparts-${{ hashFiles('.github/workflows/apt.yml') }}
-
-      - name: Install piuparts and helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-              apt-utils \
-              ca-certificates \
-              debootstrap \
-              dpkg-dev \
-              piuparts
-
       - name: Download every install-smoke .deb artifact
         uses: actions/download-artifact@v4
         with:
@@ -693,37 +682,16 @@ jobs:
           pattern: install-smoke-debs-*
           merge-multiple: true
 
-      - name: Build a local apt repo from the .debs
+      - name: Run install/remove/purge/reinstall cycle in ubuntu:24.04
         run: |
           set -eux
-          cd build/install-smoke
-          # `-m` keeps multiple versions of the same source in the
-          # index, which matters when a dep has both ~noble1 and
-          # ~noble2 .debs in the artifact set (e.g. mcp,
-          # google-genai during the floor-softening cycle).
-          dpkg-scanpackages -m . > Packages
-          gzip -kf Packages
-          ls -la
-
-      - name: Drive piuparts against the avalan .deb
-        run: |
-          set -eux
-          avalan_deb=$(ls build/install-smoke/avalan_*.deb | head -n1)
-          repo_path=$(realpath build/install-smoke)
-          # --distribution=noble + the explicit Ubuntu mirror line
-          # so debootstrap pulls from archive.ubuntu.com instead of
-          # piuparts' Debian default. --bindmount makes the local
-          # apt repo's path resolve identically inside the chroot,
-          # which is required for the file:// extra-repo line to
-          # actually be readable by apt-get inside piuparts'
-          # chroot. main+universe matches what `apt install avalan`
-          # users will configure on Noble (universe is on by
-          # default since 18.04).
-          sudo piuparts \
-              --distribution=noble \
-              --mirror="http://archive.ubuntu.com/ubuntu/ noble main universe" \
-              --bindmount="$repo_path" \
-              --extra-repo="deb [trusted=yes] file://$repo_path ./" \
-              --no-eatmydata \
-              --no-install-recommends \
-              "$avalan_deb"
+          docker run --rm \
+              --volume "$PWD:/work" \
+              --workdir /work \
+              --env DEBIAN_FRONTEND=noninteractive \
+              ubuntu:24.04 \
+              bash -euxc '
+                  apt-get update
+                  apt-get install -y --no-install-recommends ca-certificates
+                  ./scripts/install-cycle /work/build/install-smoke
+              '

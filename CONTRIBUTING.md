@@ -18,7 +18,6 @@ sudo apt install -y \
     sbuild \
     lintian \
     autopkgtest \
-    piuparts \
     dput \
     gnupg
 ```
@@ -36,10 +35,13 @@ Why each is needed:
 - **`lintian`** — package linter (`scripts/lint-package`).
 - **`autopkgtest`** — runs `debian/tests/smoke` against the built
   `.deb` (`scripts/test-package`).
-- **`piuparts`** — install/remove/purge/reinstall cycle tester
-  (`scripts/test-package`).
 - **`dput`** — uploads signed source packages to Launchpad
   (`scripts/upload-ppa`).
+
+The install/remove/purge/reinstall cycle gate used to be `piuparts`,
+but Ubuntu dropped piuparts from Noble's universe (last in Jammy).
+`scripts/install-cycle` runs the equivalent lifecycle directly via
+apt + dpkg; it needs no extra package beyond the ones above.
 - **`gnupg`** — signing key tooling; provides `gpg` plus the agents
   and pinentry that `debsign` invokes.
 

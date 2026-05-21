@@ -1,11 +1,15 @@
 #!/bin/sh
-# scripts/test-package -- run autopkgtest + piuparts against the
-# Avalan binary `.deb` produced by scripts/build-binary.
+# scripts/test-package -- run autopkgtest + the install-cycle script
+# against the Avalan binary `.deb` produced by scripts/build-binary.
 #
-# Both tools are Noble-only (they drive apt + chroot machinery), so
+# autopkgtest is Noble-only (it drives apt + chroot machinery), so
 # this script bails out with a clear message on a non-Debian dev
-# host. From a Noble VM or container with the Avalan PPA enabled, a
-# bare `scripts/test-package` is what gates Phase 5.
+# host. The cycle gate used to be piuparts, but piuparts was dropped
+# from Noble's universe (last shipped in Jammy), so scripts/install-
+# cycle now drives the equivalent install/remove/purge/reinstall
+# lifecycle directly via apt + dpkg. From a Noble VM or container
+# with the Avalan PPA enabled, a bare `scripts/test-package` is what
+# gates Phase 5.
 
 set -eu
 set -x
@@ -18,13 +22,12 @@ require_tool() {
     if ! command -v "$1" >/dev/null 2>&1; then
         set +x
         echo "FATAL: '$1' not on PATH." >&2
-        echo "       autopkgtest + piuparts are Noble-only -- run" >&2
+        echo "       autopkgtest is Noble-only -- run" >&2
         echo "       scripts/test-package from a Noble VM/container." >&2
         exit 1
     fi
 }
 require_tool autopkgtest
-require_tool piuparts
 
 # Locate the most recent Avalan binary build. scripts/build-binary
 # drops the .changes alongside the .deb in build/.
@@ -43,13 +46,11 @@ fi
 backend=${AUTOPKGTEST_BACKEND:-null}
 autopkgtest "$changes" -- "$backend"
 
-# 2. piuparts -- full install / remove / purge / reinstall cycle.
-# `--no-install-recommends` matches the install profile we document
-# in README.md so the test exercises the same dependency closure end
-# users will see. Drops nothing under /usr/lib/python3/dist-packages
-# after purge (piuparts -- not us -- enforces that).
-sudo piuparts \
-    --apt \
-    --no-install-recommends \
-    --no-eatmydata \
-    "$deb"
+# 2. install/remove/purge/reinstall cycle. Expects the .deb closure
+# (avalan + python3-* deps) staged under build/install-smoke -- run
+# `scripts/build-binary` plus every `scripts/build-dep-package` so
+# the directory is populated, or copy out the CI artifact set.
+# install-cycle itself enforces the "no leftover files under
+# /usr/lib/python3/dist-packages/avalan*" contract piuparts used to
+# enforce.
+sudo scripts/install-cycle "${INSTALL_CYCLE_DEBS:-build/install-smoke}"
