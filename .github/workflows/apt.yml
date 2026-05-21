@@ -230,6 +230,7 @@ jobs:
               dh-python \
               dpkg-dev \
               fakeroot \
+              lintian \
               pybuild-plugin-pyproject \
               python3-all \
               python3-all-dev \
