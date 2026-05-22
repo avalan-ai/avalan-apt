@@ -98,11 +98,16 @@ def test_source_tree_for_dsc_strips_revision() -> None:
 
 
 def test_build_args_flag_selection() -> None:
+    # -sa is always included on source builds so the orig tarball
+    # rides along even on non-first Debian revisions. Launchpad
+    # rejects the first upload of a ~ppa1~noble2-style revision into
+    # an empty PPA otherwise.
     assert bdp._build_args("source") == [
         "dpkg-buildpackage",
         "-S",
         "-us",
         "-uc",
+        "-sa",
     ]
     assert bdp._build_args("binary") == [
         "dpkg-buildpackage",
@@ -117,7 +122,7 @@ def test_build_args_flag_selection() -> None:
 def test_build_args_allow_unmet_build_deps_appends_d() -> None:
     assert bdp._build_args(
         "source", allow_unmet_build_deps=True
-    ) == ["dpkg-buildpackage", "-S", "-us", "-uc", "-d"]
+    ) == ["dpkg-buildpackage", "-S", "-us", "-uc", "-sa", "-d"]
     assert bdp._build_args(
         "binary", allow_unmet_build_deps=True
     ) == ["dpkg-buildpackage", "-b", "-us", "-uc", "-d"]
@@ -155,6 +160,7 @@ def test_pypi_sdist_invokes_dpkg_buildpackage_in_unpacked_tree(
         "-S",
         "-us",
         "-uc",
+        "-sa",
     ]
     assert call["cwd"] == str(out)
     assert call["check"] is True
@@ -324,6 +330,7 @@ def test_debian_rebuild_runs_dpkg_source_then_buildpackage(
         "-S",
         "-us",
         "-uc",
+        "-sa",
     ]
     assert runner.calls[1]["cwd"] == str(out)
 
