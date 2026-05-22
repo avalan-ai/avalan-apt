@@ -1,0 +1,10 @@
+#!/bin/sh
+# scripts/upload-deps -- host-side launcher for the per-dep PPA
+# upload loop. The actual work runs inside an avalan-apt-builder
+# container; see scripts/upload_deps.py and
+# scripts/upload_deps_container.sh.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/upload_deps.py" "$@"

@@ -34,8 +34,10 @@ RUN apt-get update \
         devscripts \
         dh-python \
         dpkg-dev \
+        dput \
         fakeroot \
         git \
+        gnupg \
         libfreetype-dev \
         libjpeg-dev \
         liblcms2-dev \
