@@ -124,6 +124,7 @@ def run_in_container(
     *,
     dry_run: bool,
     debug: bool,
+    bump_revision: str,
 ) -> int:
     cmd = [
         "docker",
@@ -145,6 +146,8 @@ def run_in_container(
         "DRY_RUN=" + ("1" if dry_run else ""),
         "--env",
         "DEBUG=" + ("1" if debug else ""),
+        "--env",
+        f"BUMP_REVISION={bump_revision}",
         image,
         "scripts/upload_deps_container.sh",
     ]
@@ -192,6 +195,17 @@ def main(argv: list[str] | None = None) -> int:
         "--yes",
         action="store_true",
         help="skip the host-side confirmation prompt",
+    )
+    parser.add_argument(
+        "--bump-revision",
+        default="",
+        help=(
+            "append SUFFIX to each source's version via 'dch --local' "
+            "before building. Use this to re-upload sources already "
+            "published in the PPA (e.g. to queue builds on a "
+            "newly-enabled architecture) -- Launchpad requires a "
+            "strictly-greater version to accept the upload."
+        ),
     )
     parser.add_argument(
         "--passphrase-file",
@@ -266,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
         args.ppa,
         dry_run=args.dry_run,
         debug=args.debug,
+        bump_revision=args.bump_revision,
     )
 
 

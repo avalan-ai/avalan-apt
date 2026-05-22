@@ -73,8 +73,11 @@ def build_pypi_sdist(
     mode: str,
     runner=subprocess.run,
     allow_unmet_build_deps: bool = False,
+    bump_revision: str = "",
 ) -> Path:
     src_dir = pds.prepare_pypi_sdist(dep, repo_root)
+    if bump_revision:
+        _bump_local_revision(src_dir, suffix=bump_revision, runner=runner)
     runner(
         _build_args(mode, allow_unmet_build_deps=allow_unmet_build_deps),
         cwd=str(src_dir),
@@ -91,6 +94,7 @@ def build_debian_rebuild(
     runner=subprocess.run,
     allow_unmet_build_deps: bool = False,
     ppa_suffix: str = "+noble",
+    bump_revision: str = "",
 ) -> Path:
     dsc_path = pds.prepare_debian_rebuild(dep, repo_root)
     src_dir = _source_tree_for_dsc(dsc_path)
@@ -102,12 +106,45 @@ def build_debian_rebuild(
     )
     if ppa_suffix:
         _retarget_to_noble(src_dir, suffix=ppa_suffix, runner=runner)
+    if bump_revision:
+        _bump_local_revision(src_dir, suffix=bump_revision, runner=runner)
     runner(
         _build_args(mode, allow_unmet_build_deps=allow_unmet_build_deps),
         cwd=str(src_dir),
         check=True,
     )
     return src_dir
+
+
+def _bump_local_revision(
+    src_dir: Path,
+    *,
+    suffix: str,
+    runner=subprocess.run,
+) -> None:
+    """Append ``<suffix>`` to the topmost changelog entry's version.
+
+    Used to force a new Launchpad publication when the upstream
+    version on a previously-uploaded source has not changed -- the
+    canonical scenario is "we just enabled a new architecture on the
+    PPA and need builds for the already-uploaded sources." dch's
+    --local mode appends the suffix with an incrementing digit
+    (e.g. ``~rebuild`` -> ``~rebuild1``), and the new changelog entry
+    carries a one-line rationale so the audit trail stays honest.
+    """
+    runner(
+        [
+            "dch",
+            "--local",
+            suffix,
+            "--distribution",
+            "noble",
+            "--force-distribution",
+            "Re-upload to trigger builds on newly enabled processors.",
+        ],
+        cwd=str(src_dir),
+        check=True,
+    )
 
 
 def _retarget_to_noble(
@@ -213,6 +250,18 @@ def build_parser() -> argparse.ArgumentParser:
             "Default: %(default)s."
         ),
     )
+    parser.add_argument(
+        "--bump-revision",
+        default="",
+        help=(
+            "append this suffix to the source version after preparing "
+            "the tree, via 'dch --local'. Use this when you need to "
+            "re-upload a source that is already published in the PPA "
+            "(e.g. to queue builds on a newly enabled architecture); "
+            "the version bump is what makes Launchpad accept the "
+            "upload as new. Empty default means no bump."
+        ),
+    )
     return parser
 
 
@@ -237,17 +286,21 @@ def main(
     dep = pds.find_dep(map_path, args.name)
 
     if dep.provenance == "pypi-sdist":
-        tool_checker(["dpkg-buildpackage"])
+        tools_needed = ["dpkg-buildpackage"]
+        if args.bump_revision:
+            tools_needed.append("dch")
+        tool_checker(tools_needed)
         out = build_pypi_sdist(
             dep,
             repo_root,
             mode=args.mode,
             runner=runner,
             allow_unmet_build_deps=args.allow_unmet_build_deps,
+            bump_revision=args.bump_revision,
         )
     elif dep.provenance == "debian-rebuild":
         required = ["dpkg-source", "dpkg-buildpackage"]
-        if args.ppa_suffix:
+        if args.ppa_suffix or args.bump_revision:
             required.append("dch")
         tool_checker(required)
         out = build_debian_rebuild(
@@ -257,6 +310,7 @@ def main(
             runner=runner,
             allow_unmet_build_deps=args.allow_unmet_build_deps,
             ppa_suffix=args.ppa_suffix,
+            bump_revision=args.bump_revision,
         )
     else:
         print(

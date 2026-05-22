@@ -125,7 +125,11 @@ for dep in $DEP_NAMES; do
     # (Launchpad will install build-deps from its own profile on the
     # buildds, so an unsigned .dsc with sid's Build-Depends works
     # there even if it doesn't build locally).
-    if ! scripts/build-dep-package "$dep" --mode source --allow-unmet-build-deps; then
+    build_args=("$dep" --mode source --allow-unmet-build-deps)
+    if [ -n "${BUMP_REVISION:-}" ]; then
+        build_args+=(--bump-revision "$BUMP_REVISION")
+    fi
+    if ! scripts/build-dep-package "${build_args[@]}"; then
         echo "FAIL build-dep-package: $dep" >&2
         failed+=("$dep")
         continue
