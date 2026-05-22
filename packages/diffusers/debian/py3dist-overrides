@@ -1,0 +1,12 @@
+# Map upstream Requires-Dist names that Noble's default dh_python3
+# fallback table does not carry to their Avalan-PPA Debian packages.
+#
+# huggingface_hub is the canonical case here: dh_python3 cannot map
+# the PyPI name to python3-huggingface-hub without this hint because
+# python3-huggingface-hub is not in Noble's archive (it lives only in
+# the Avalan PPA), so the system fallback table on the builder has no
+# entry for it. Without the override, python3-diffusers' generated
+# Depends omits python3-huggingface-hub and an apt-get install of
+# avalan ends up missing the module that avalan.model.hubs.huggingface
+# imports at runtime.
+huggingface-hub python3-huggingface-hub

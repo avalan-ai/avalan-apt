@@ -407,7 +407,7 @@ provenance = "pypi-sdist"
 sdist_url = "https://files.pythonhosted.org/packages/15/77/a9e27cdb6a2f8387c7b8f7e6a107458b7b96f156a5a78fab922d0d563df8/huggingface_hub-0.34.0.tar.gz"
 sdist_sha256 = "2c6f373fac66b1afc2fe47efd8e603a876935dbd669f966231f265da5c353e25"
 min_version = "0.34.0"
-notes = "Transitive runtime dep of diffusers. Noble ships 0.20.3 (below floor). Pinned at the lowest version that satisfies diffusers' constraint; the upstream sdist requires `hf-xet` (a Rust extension that's not in Noble and that Avalan does not need for the HTTP download paths), so the Avalan-side debian/ ships a quilt patch dropping that line."
+notes = "Transitive runtime dep of diffusers AND directly imported by Avalan (avalan.model.hubs.huggingface and friends) -- Avalan's upstream pyproject only lists huggingface-hub in the `local` opt-in extra, but the runtime code imports it unconditionally from default-shipped modules, so the .deb must carry it. Noble ships 0.20.3 (below floor). Pinned at 0.34 because every symbol Avalan imports (HfApi, ModelInfo, login, scan_cache_dir, hf_hub_download, AsyncInferenceClient, GatedRepoError) is stable since 0.20 and diffusers 0.37.1 predates the 1.x line. python3-diffusers' Depends list pulls this in via a Avalan-side py3dist-overrides entry (huggingface-hub -> python3-huggingface-hub) because dh_python3's default fallback table on Noble does not carry the mapping. The upstream sdist requires `hf-xet` (a Rust extension that's not in Noble and that Avalan does not need for the HTTP download paths), so the Avalan-side debian/ ships a quilt patch dropping that line."
 
 [[dep]]
 pypi_name = "google-genai"
