@@ -156,7 +156,11 @@ for dep in $DEP_NAMES; do
     fi
 
     echo "Uploading $changes -> $AVALAN_PPA"
-    if ! dput "$AVALAN_PPA" "$changes"; then
+    # -f tells dput to ignore the .ppa.upload cache file and actually
+    # transfer the .changes. Without it, a retry after a Launchpad-side
+    # rejection silently no-ops because dput sees the prior upload's
+    # cache file and assumes the work is done.
+    if ! dput -f "$AVALAN_PPA" "$changes"; then
         echo "FAIL dput $changes" >&2
         failed+=("$dep")
         continue

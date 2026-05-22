@@ -144,7 +144,12 @@ def _retarget_to_noble(
 
 
 _BUILD_FLAGS = {
-    "source": ["-S", "-us", "-uc"],
+    # -sa forces inclusion of the .orig tarball in the source build.
+    # Without it dpkg-buildpackage omits the orig when the Debian
+    # revision is anything other than ~1 (e.g. ~ppa1~noble2), which
+    # makes Launchpad reject the first upload of that revision into
+    # a PPA that does not yet carry the upstream tarball.
+    "source": ["-S", "-us", "-uc", "-sa"],
     "binary": ["-b", "-us", "-uc"],
 }
 
