@@ -1,0 +1,103 @@
+#!/bin/sh
+# scripts/upload-ppa -- sign a source .changes file with the Avalan
+# Packaging key and dput it to a Launchpad PPA.
+#
+# Defaults to the staging PPA (ppa:avalan-ai/avalan-staging) for the
+# Phase 7 dry run. Override with AVALAN_PPA=ppa:avalan-ai/avalan for
+# the Phase 8 public release.
+#
+# Required environment:
+#   AVALAN_GPG_KEY_ID -- 40-char fingerprint of the Avalan Packaging
+#                       key. The script refuses to run if the secret
+#                       half is not in the local keyring.
+#
+# Optional environment:
+#   AVALAN_PPA        -- dput target. Defaults to
+#                       ppa:avalan-ai/avalan-staging.
+#   CHANGES           -- path to the _source.changes file to upload.
+#                       Defaults to the Avalan source .changes for the
+#                       version recorded in release.toml.
+#   ASSUME_YES        -- skip the interactive confirmation prompt
+#                       (for automation; use carefully -- Launchpad
+#                       uploads are not undoable).
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+cd "$repo_root"
+
+ppa=${AVALAN_PPA:-ppa:avalan-ai/avalan-staging}
+
+if [ -z "${AVALAN_GPG_KEY_ID:-}" ]; then
+    echo "FATAL: AVALAN_GPG_KEY_ID is unset. Export the fingerprint of the Avalan Packaging key before running this script." >&2
+    exit 2
+fi
+
+case "$AVALAN_GPG_KEY_ID" in
+    *[!0-9A-Fa-f]*|"")
+        echo "FATAL: AVALAN_GPG_KEY_ID='$AVALAN_GPG_KEY_ID' is not a hex fingerprint." >&2
+        exit 2
+        ;;
+esac
+
+# Verify the secret half is present. gpg --list-secret-keys exits
+# non-zero when the key is missing and writes to stderr; capture both
+# so the error message is helpful.
+if ! gpg --list-secret-keys "$AVALAN_GPG_KEY_ID" >/dev/null 2>&1; then
+    echo "FATAL: no secret key for fingerprint $AVALAN_GPG_KEY_ID in the local GPG keyring. Import the Avalan Packaging key (subkeys bundle from the team vault) before running this script." >&2
+    exit 2
+fi
+
+if [ -n "${CHANGES:-}" ]; then
+    changes=$CHANGES
+else
+    version=$(python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['version'])")
+    # Glob yields one match per source build; if there are multiple
+    # the user has stale builds in build/ and should clean before
+    # uploading. Match the *_source.changes pattern that
+    # dpkg-buildpackage -S writes; the binary .changes from -b is
+    # not a PPA upload target.
+    set +e
+    matches=$(ls -1 build/avalan_"${version}"-*_source.changes 2>/dev/null)
+    set -e
+    count=$(printf '%s\n' "$matches" | grep -c . || true)
+    if [ "$count" -ne 1 ]; then
+        echo "FATAL: expected exactly one build/avalan_${version}-*_source.changes file, found $count." >&2
+        if [ "$count" -gt 1 ]; then
+            printf '%s\n' "$matches" >&2
+        fi
+        exit 1
+    fi
+    changes=$matches
+fi
+
+if [ ! -f "$changes" ]; then
+    echo "FATAL: '$changes' does not exist. Run scripts/build-source first." >&2
+    exit 1
+fi
+
+echo "About to upload:"
+echo "  changes:  $changes"
+echo "  ppa:      $ppa"
+echo "  key:      $AVALAN_GPG_KEY_ID"
+echo
+echo "Launchpad uploads are NOT undoable. A bad version eats that"
+echo "version slot in the PPA forever; you can only fix it by bumping"
+echo "the changelog and re-uploading."
+
+if [ -z "${ASSUME_YES:-}" ]; then
+    printf "Proceed with debsign + dput? [y/N] "
+    read -r reply
+    case "$reply" in
+        y|Y|yes|YES) ;;
+        *)
+            echo "Aborted." >&2
+            exit 1
+            ;;
+    esac
+fi
+
+set -x
+debsign -k"$AVALAN_GPG_KEY_ID" "$changes"
+dput "$ppa" "$changes"
