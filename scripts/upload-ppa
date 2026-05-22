@@ -2,6 +2,12 @@
 # scripts/upload-ppa -- sign a source .changes file with the Avalan
 # Packaging key and dput it to a Launchpad PPA.
 #
+# Runs debsign + dput inside the avalan-apt-builder container so the
+# script works the same on hosts that do not carry devscripts/dput
+# natively (e.g. macOS). The container's GPG receives the secret
+# subkeys + passphrase via stdin; both stay in container memory and
+# evaporate when the container exits.
+#
 # Defaults to the staging PPA (ppa:avalan-ai/avalan-staging) for the
 # Phase 7 dry run. Override with AVALAN_PPA=ppa:avalan-ai/avalan for
 # the Phase 8 public release.
@@ -9,17 +15,17 @@
 # Required environment:
 #   AVALAN_GPG_KEY_ID -- 40-char fingerprint of the Avalan Packaging
 #                       key. The script refuses to run if the secret
-#                       half is not in the local keyring.
+#                       subkeys cannot be exported from the host.
 #
 # Optional environment:
-#   AVALAN_PPA        -- dput target. Defaults to
-#                       ppa:avalan-ai/avalan-staging.
-#   CHANGES           -- path to the _source.changes file to upload.
-#                       Defaults to the Avalan source .changes for the
-#                       version recorded in release.toml.
-#   ASSUME_YES        -- skip the interactive confirmation prompt
-#                       (for automation; use carefully -- Launchpad
-#                       uploads are not undoable).
+#   AVALAN_PPA          -- dput target. Defaults to
+#                          ppa:avalan-ai/avalan-staging.
+#   AVALAN_BUILDER_IMAGE -- container image to invoke. Defaults to
+#                          avalan-apt-builder:noble.
+#   CHANGES             -- path to the _source.changes file to upload.
+#                          Defaults to the Avalan source .changes for
+#                          the version recorded in release.toml.
+#   ASSUME_YES          -- skip the interactive confirmation prompt.
 
 set -eu
 
@@ -28,6 +34,7 @@ repo_root=$(cd "$script_dir/.." && pwd)
 cd "$repo_root"
 
 ppa=${AVALAN_PPA:-ppa:avalan-ai/avalan-staging}
+image=${AVALAN_BUILDER_IMAGE:-avalan-apt-builder:noble}
 
 if [ -z "${AVALAN_GPG_KEY_ID:-}" ]; then
     echo "FATAL: AVALAN_GPG_KEY_ID is unset. Export the fingerprint of the Avalan Packaging key before running this script." >&2
@@ -41,9 +48,6 @@ case "$AVALAN_GPG_KEY_ID" in
         ;;
 esac
 
-# Verify the secret half is present. gpg --list-secret-keys exits
-# non-zero when the key is missing and writes to stderr; capture both
-# so the error message is helpful.
 if ! gpg --list-secret-keys "$AVALAN_GPG_KEY_ID" >/dev/null 2>&1; then
     echo "FATAL: no secret key for fingerprint $AVALAN_GPG_KEY_ID in the local GPG keyring. Import the Avalan Packaging key (subkeys bundle from the team vault) before running this script." >&2
     exit 2
@@ -53,11 +57,6 @@ if [ -n "${CHANGES:-}" ]; then
     changes=$CHANGES
 else
     version=$(python3 -c "import tomllib; print(tomllib.load(open('release.toml','rb'))['upstream']['version'])")
-    # Glob yields one match per source build; if there are multiple
-    # the user has stale builds in build/ and should clean before
-    # uploading. Match the *_source.changes pattern that
-    # dpkg-buildpackage -S writes; the binary .changes from -b is
-    # not a PPA upload target.
     set +e
     matches=$(ls -1 build/avalan_"${version}"-*_source.changes 2>/dev/null)
     set -e
@@ -73,7 +72,7 @@ else
 fi
 
 if [ ! -f "$changes" ]; then
-    echo "FATAL: '$changes' does not exist. Run scripts/build-source first." >&2
+    echo "FATAL: '$changes' does not exist. Run scripts/build-source (or scripts/build-dep-package) first." >&2
     exit 1
 fi
 
@@ -81,6 +80,7 @@ echo "About to upload:"
 echo "  changes:  $changes"
 echo "  ppa:      $ppa"
 echo "  key:      $AVALAN_GPG_KEY_ID"
+echo "  image:    $image"
 echo
 echo "Launchpad uploads are NOT undoable. A bad version eats that"
 echo "version slot in the PPA forever; you can only fix it by bumping"
@@ -98,6 +98,54 @@ if [ -z "${ASSUME_YES:-}" ]; then
     esac
 fi
 
-set -x
-debsign -k"$AVALAN_GPG_KEY_ID" "$changes"
-dput "$ppa" "$changes"
+# Ask for the passphrase once on the host (so it stays out of process
+# args / env on the container).
+printf "Avalan Packaging key passphrase: "
+stty -echo
+read -r AVALAN_PASSPHRASE
+stty echo
+echo
+if [ -z "$AVALAN_PASSPHRASE" ]; then
+    echo "FATAL: empty passphrase." >&2
+    exit 2
+fi
+
+# Export the secret subkeys with the host's gpg using loopback so no
+# pinentry pops up. The subkeys + passphrase travel to the container
+# over stdin (line 1 = passphrase, rest = ASCII-armored subkeys).
+SUBKEYS=$(
+    printf '%s\n' "$AVALAN_PASSPHRASE" \
+        | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+              --armor --export-secret-subkeys "$AVALAN_GPG_KEY_ID"
+) || {
+    echo "FATAL: failed to export secret subkeys." >&2
+    exit 1
+}
+
+printf '%s\n%s\n' "$AVALAN_PASSPHRASE" "$SUBKEYS" | docker run --rm -i \
+    --platform=linux/amd64 \
+    --volume "$repo_root:/work" \
+    --workdir /work \
+    --env "AVALAN_GPG_KEY_ID=$AVALAN_GPG_KEY_ID" \
+    --env "AVALAN_PPA=$ppa" \
+    --env "CHANGES=$changes" \
+    "$image" \
+    bash -euo pipefail -c '
+        IFS= read -r PASSPHRASE
+        SUBKEYS=$(cat)
+        mkdir -p ~/.gnupg && chmod 700 ~/.gnupg
+        cat > ~/.gnupg/gpg-agent.conf <<EOF
+allow-preset-passphrase
+default-cache-ttl 14400
+max-cache-ttl 86400
+EOF
+        gpg-connect-agent reloadagent /bye >/dev/null
+        printf "%s" "$SUBKEYS" | gpg --batch --pinentry-mode loopback \
+            --passphrase "$PASSPHRASE" --import
+        KEYGRIP=$(gpg --list-secret-keys --with-keygrip --with-colons "$AVALAN_GPG_KEY_ID" \
+            | awk -F: "/^ssb:/ {s=1; next} /^grp:/ {if (s) {print \$10; exit}}")
+        /usr/lib/gnupg/gpg-preset-passphrase --preset \
+            --passphrase "$PASSPHRASE" "$KEYGRIP"
+        debsign -k"$AVALAN_GPG_KEY_ID" "$CHANGES"
+        dput -f "$AVALAN_PPA" "$CHANGES"
+    '
