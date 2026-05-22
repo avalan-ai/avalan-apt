@@ -1,5 +1,14 @@
 name: apt
 
+# Performance budget: median PR wall time under 8 minutes on
+# ubuntu-24.04 runners. The slowest single cell sets the floor
+# (currently dep-build (pydantic-core) at ~5 minutes -- the
+# cargo-vendored Rust compile runs fresh every run; the rest is
+# cache-hit work). Caches: apt archives keyed on this workflow file
+# hash, the upstream Avalan sdist keyed on release.toml, per-dep
+# sources keyed on debian/dependency-map.toml. If median PR runs
+# creep past the 8-minute floor, audit the cache keys before
+# adding more deps.
 on:
   push:
     branches: [main]
