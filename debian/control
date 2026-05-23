@@ -45,6 +45,7 @@ Depends:
  python3-sqlalchemy (>= 2.0.43),
  python3-sqlglot (>= 22.0),
  python3-sympy (>= 1.12),
+ python3-tiktoken (>= 0.6.0),
  python3-uvicorn (>= 0.27.0),
 # END generated-depends
 Suggests:

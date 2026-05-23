@@ -19,7 +19,7 @@ Forwarded: not-needed
 Last-Update: 2026-05-19
 --- a/pyproject.toml
 +++ b/pyproject.toml
-@@ -196,6 +196,23 @@
+@@ -196,6 +196,24 @@
  convention = "pep257"
  
  [tool.poetry]
@@ -40,6 +40,7 @@ Last-Update: 2026-05-19
 +packaging = ">=24.0,<27.0"
 +humanize = ">=4.12.3,<5.0.0"
 +rich = ">=13.7.0,<16.0.0"
++tiktoken = ">=0.6.0,<1.0.0"
  
  [tool.poetry.group.test]
  optional = true

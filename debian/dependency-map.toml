@@ -12,18 +12,19 @@
 # against `apt-cache madison` and the configured PPA index.
 
 [meta]
-upstream_version = "1.4.9"
+upstream_version = "1.4.10"
 # Commit in homebrew-avalan that introduced the upstream pin this map
 # matches. CI's parity check re-derives extras + constraints from the
 # formula at this sha and compares against this inventory. The 1.4.9
-# upstream introduces two new opt-in extras (`a2a`, `litellm`) that
-# move a2a-sdk and litellm out of the default profile; the Homebrew
+# upstream introduced two new opt-in extras (`a2a`, `litellm`) that
+# moved a2a-sdk and litellm out of the default profile, and 1.4.10
+# adds tiktoken back to the base profile. The Homebrew
 # formula has not yet been bumped, so this still points at the 1.4.7
 # commit. The formula's EXTRAS list (agent/server/tool/vendors) is
-# unchanged between 1.4.7, 1.4.8, and 1.4.9, so the parity check
-# stays meaningful — the new `a2a` / `litellm` extras live in
-# pyproject only and are correctly omitted from the formula's
-# default profile.
+# unchanged between 1.4.7, 1.4.8, 1.4.9, and 1.4.10, so the parity
+# check stays meaningful — the `a2a` / `litellm` extras live in
+# pyproject only and are correctly omitted from the formula's default
+# profile, while base deps are checked directly from pyproject.
 homebrew_formula_sha = "d3802930b44c2aad088c14fddb2fc5b12e880076"
 
 # --- Base (always installed by upstream) ------------------------------------
@@ -57,6 +58,15 @@ extra = "base"
 source = "noble"
 min_version = "13.7.0"
 notes = "Noble ships 13.7.1-1, exactly inside the widened 1.4.8 range (>=13.7.0,<16.0.0)."
+
+[[dep]]
+pypi_name = "tiktoken"
+constraint = ">=0.6.0,<1.0.0"
+debian_name = "python3-tiktoken"
+extra = "base"
+source = "noble"
+min_version = "0.6.0"
+notes = "Noble ships 0.6.0-2ubuntu1, exactly the new 1.4.10 floor. Upstream moved tiktoken back into the base profile because inference token accounting imports it unconditionally."
 
 # --- Extra `agent` ----------------------------------------------------------
 

@@ -1,3 +1,11 @@
+avalan (1.4.10-0ubuntu1~ppa1~noble1) noble; urgency=medium
+
+  * New upstream release (1.4.10).
+  * Add python3-tiktoken back to the base Depends set; upstream now
+    imports tiktoken for inference token accounting.
+
+ -- Avalan Packaging Team <avalan@avalan.ai>  Sat, 23 May 2026 13:50:00 -0300
+
 avalan (1.4.9-0ubuntu1~ppa1~noble1) noble; urgency=medium
 
   * New upstream release (1.4.9).
