@@ -3,9 +3,13 @@
 Install Avalan from the Avalan PPA on Ubuntu 24.04 LTS (Noble):
 
 ```sh
-sudo add-apt-repository ppa:avalan-ai/avalan
+# add-apt-repository ships in software-properties-common, which is
+# pre-installed on Desktop Noble but may be missing on minimal Server
+# or Cloud images and on the ubuntu:24.04 Docker image.
+sudo apt install -y software-properties-common
+sudo add-apt-repository -y ppa:avalan-ai/avalan
 sudo apt update
-sudo apt install avalan
+sudo apt install -y avalan
 ```
 
 Verify the CLI:
@@ -62,6 +66,7 @@ following upstream extras are not in the .deb:
 To enable any of them, layer a virtualenv on top of the system install:
 
 ```sh
+sudo apt install -y python3-venv   # not in every Noble base image
 python3 -m venv ~/.avalan/venv
 source ~/.avalan/venv/bin/activate
 pip install "avalan[browser]"      # or [local], [vision], [audio], ...
