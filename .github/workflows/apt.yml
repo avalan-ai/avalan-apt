@@ -483,6 +483,9 @@ jobs:
           fi
           lintian --pedantic --info --fail-on "$fail_on" "$changes"
 
+      - name: Audit py3dist-overrides for missing intra-PPA mappings
+        run: scripts/audit-py3dist-overrides
+
       - name: Upload ${{ matrix.dep }} .deb for install-smoke
         uses: actions/upload-artifact@v4
         with:
@@ -656,6 +659,9 @@ jobs:
               lintian --pedantic --info --fail-on error,warning \
                   "$changes"
           done
+
+      - name: Audit py3dist-overrides for missing intra-PPA mappings
+        run: scripts/audit-py3dist-overrides
 
       - name: Upload pydantic + openai .debs for install-smoke
         # Only the two chain leaves; annotated-types, pydantic-core,

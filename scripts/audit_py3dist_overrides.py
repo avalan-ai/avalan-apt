@@ -29,6 +29,7 @@ script inside the builder container::
 
 from __future__ import annotations
 
+import argparse
 import re
 import shutil
 import subprocess
@@ -157,7 +158,25 @@ def has_override(dep_dir_name: str, override_for: str) -> bool:
     return False
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Audit hand-packaged deps for missing py3dist-overrides "
+            "entries against upstream Requires-Dist."
+        )
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help=(
+            "Print a line for each dep skipped because its .orig or "
+            ".deb is absent from build/deps/. Quiet by default so CI "
+            "cells that only built one dep don't drown the summary in "
+            "skip noise."
+        ),
+    )
+    args = parser.parse_args(argv)
+
     if shutil.which("dpkg-deb") is None:
         print(
             "FATAL: dpkg-deb not on PATH. Run this script inside the "
@@ -172,18 +191,22 @@ def main() -> int:
     hand = hand_packaged_pypi_names()
     dirs = {d.name for d in PACKAGES_DIR.iterdir() if d.is_dir()}
 
+    audited = 0
+    eligible = 0
     problems = 0
     for dep_dir_name in sorted(dirs):
         canon_pyname = canon(dep_dir_name)
         if canon_pyname not in hand:
             continue
+        eligible += 1
         orig = find_orig_tarball(canon_pyname)
         if not orig:
-            print(
-                f"  {dep_dir_name}: no orig tarball under "
-                f"build/deps/, skipping (run scripts/prepare-dep-source "
-                f"{dep_dir_name} first)"
-            )
+            if args.verbose:
+                print(
+                    f"  {dep_dir_name}: no orig tarball under "
+                    f"build/deps/, skipping (run "
+                    f"scripts/prepare-dep-source {dep_dir_name} first)"
+                )
             continue
         requires = extract_upstream_requires(orig)
         intra_ppa = sorted({
@@ -192,15 +215,18 @@ def main() -> int:
             if canon(r) in hand and canon(r) != canon_pyname
         })
         if not intra_ppa:
+            audited += 1
             continue
         deb = find_deb(canon_pyname)
         if not deb:
-            print(
-                f"  {dep_dir_name}: no .deb under build/deps/, "
-                f"can't verify (run scripts/build-dep-package "
-                f"{dep_dir_name} --mode binary)"
-            )
+            if args.verbose:
+                print(
+                    f"  {dep_dir_name}: no .deb under build/deps/, "
+                    f"can't verify (run scripts/build-dep-package "
+                    f"{dep_dir_name} --mode binary)"
+                )
             continue
+        audited += 1
         depends = deb_depends(deb)
         for ref in intra_ppa:
             expected_deb = pyname_to_deb(ref)
@@ -218,7 +244,10 @@ def main() -> int:
             if mark == "MISSING OVERRIDE":
                 problems += 1
     print()
-    print(f"{problems} hand-packaged dep(s) need new py3dist-overrides entries.")
+    print(
+        f"audited {audited} of {eligible} overlays; "
+        f"{problems} need new py3dist-overrides entries."
+    )
     return 0 if problems == 0 else 1
 
 
