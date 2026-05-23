@@ -20,7 +20,13 @@ fi
 
 # dpkg-buildpackage writes artifacts (.dsc, .debian.tar.xz, _source.changes)
 # to the parent of the source tree, i.e. into build/ alongside the source.
-(cd "$src_dir" && dpkg-buildpackage -S -us -uc)
+#
+# -sa forces inclusion of the .orig.tar.* in the _source.changes. Without
+# it dpkg-buildpackage omits the orig on any revision other than -1,
+# which makes Launchpad reject the first upload of a ~noble2+ rebuild
+# into a PPA that does not yet carry the upstream tarball. Harmless on
+# fresh upstream bumps (the orig would have been included anyway).
+(cd "$src_dir" && dpkg-buildpackage -S -us -uc -sa)
 
 # Each build script shells out to lint-package on success. The lint
 # script lands in slice 1.3; until then this is a no-op.
