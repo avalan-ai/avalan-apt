@@ -1,0 +1,20 @@
+#!/bin/sh
+# scripts/audit-py3dist-overrides -- POSIX shim around
+# scripts/audit_py3dist_overrides.py.
+#
+# Scans every hand-packaged dep under packages/ and reports any
+# upstream Requires-Dist edge to ANOTHER hand-packaged dep that is
+# missing from the resulting .deb's Depends. Catches the failure mode
+# where dh_python3 silently omits a dep because its mapping (PyPI
+# name -> python3-<deb name>) is not in Noble's fallback table -- our
+# hand-packaged python3-X packages live only in the Avalan PPA, so
+# they need an explicit `packages/<dep>/debian/py3dist-overrides`
+# entry in any consumer that imports them.
+#
+# Requires dpkg-deb. On a non-Debian dev host invoke via the builder
+# container.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "$script_dir/audit_py3dist_overrides.py" "$@"
