@@ -1,0 +1,71 @@
+#!/bin/sh
+# scripts/check-dependencies-live -- run scripts/check-dependencies
+# against a live Noble + Avalan PPA apt index, inside a throwaway
+# ubuntu:24.04 Docker container.
+#
+# The container adds the configured Avalan PPA (default:
+# ppa:avalan-ai/avalan-staging), apt-updates so the index lands,
+# then invokes scripts/check-dependencies --live-ppa with whatever
+# extra arguments the caller passes. The repo is bind-mounted at
+# /work; the apt index lives inside the container and is discarded
+# on exit.
+#
+# Environment:
+#   AVALAN_PPA          -- PPA to add. Defaults to
+#                          ppa:avalan-ai/avalan-staging.
+#   AVALAN_LIVE_IMAGE   -- base image. Defaults to ubuntu:24.04.
+#   AVALAN_LIVE_PLATFORM -- override docker --platform (e.g.
+#                          linux/arm64). Unset by default; Docker
+#                          picks the host architecture.
+#   AVALAN_FORMULA      -- path to the Homebrew formula. Defaults to
+#                          ../homebrew-avalan/Formula/avalan.rb
+#                          relative to the repo root.
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$script_dir/.." && pwd)
+
+ppa=${AVALAN_PPA:-ppa:avalan-ai/avalan-staging}
+image=${AVALAN_LIVE_IMAGE:-ubuntu:24.04}
+platform=${AVALAN_LIVE_PLATFORM:-}
+formula_default=$(cd "$repo_root/.." && pwd)/homebrew-avalan/Formula/avalan.rb
+formula=${AVALAN_FORMULA:-$formula_default}
+
+if ! command -v docker >/dev/null 2>&1; then
+    echo "FATAL: docker not on PATH" >&2
+    exit 2
+fi
+
+if [ ! -f "$formula" ]; then
+    echo "FATAL: formula not found at $formula (set AVALAN_FORMULA)" >&2
+    exit 2
+fi
+
+platform_flag=""
+if [ -n "$platform" ]; then
+    platform_flag="--platform=$platform"
+fi
+
+exec docker run --rm $platform_flag \
+    --volume "$repo_root:/work" \
+    --volume "$formula:/formula/avalan.rb:ro" \
+    --workdir /work \
+    --env "AVALAN_PPA=$ppa" \
+    --env DEBIAN_FRONTEND=noninteractive \
+    "$image" \
+    bash -c '
+        set -eu
+        apt-get update -qq
+        apt-get install -y --no-install-recommends \
+            ca-certificates \
+            python3 \
+            python3-packaging \
+            software-properties-common \
+            >/dev/null
+        add-apt-repository -y "$AVALAN_PPA" >/dev/null
+        apt-get update -qq
+        exec scripts/check-dependencies \
+            --formula /formula/avalan.rb \
+            --live-ppa "$@"
+    ' bash "$@"

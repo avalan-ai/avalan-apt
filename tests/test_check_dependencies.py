@@ -115,6 +115,57 @@ def test_noble_version_below_floor_fails(capsys):
     assert "below floor" in stderr
 
 
+def test_live_ppa_uses_apt_query_for_ppa_rows(capsys):
+    # When --live-ppa is set, the same apt fixture is reused for both
+    # noble and ppa rows -- mirroring apt-cache madison's behaviour on
+    # a Noble host with the PPA configured.
+    rc = cd.main(
+        [
+            f"--formula={FIXTURES / 'formula_ok.rb'}",
+            f"--pyproject={FIXTURES / 'pyproject_ok.toml'}",
+            f"--map={FIXTURES / 'depmap_ok.toml'}",
+            f"--apt-fixture={FIXTURES / 'apt_cache_live_ppa_ok.json'}",
+            "--live-ppa",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert rc == 0, f"{captured.out}\n{captured.err}"
+
+
+def test_live_ppa_missing_package_fails(capsys):
+    rc = cd.main(
+        [
+            f"--formula={FIXTURES / 'formula_ok.rb'}",
+            f"--pyproject={FIXTURES / 'pyproject_ok.toml'}",
+            f"--map={FIXTURES / 'depmap_ok.toml'}",
+            f"--apt-fixture={FIXTURES / 'apt_cache_live_ppa_missing.json'}",
+            "--live-ppa",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "python3-fastapi" in captured.err
+    assert "PPA" in captured.err
+
+
+def test_live_ppa_conflicts_with_ppa_fixture(capsys):
+    import pytest
+
+    with pytest.raises(SystemExit):
+        cd.main(
+            [
+                f"--formula={FIXTURES / 'formula_ok.rb'}",
+                f"--pyproject={FIXTURES / 'pyproject_ok.toml'}",
+                f"--map={FIXTURES / 'depmap_ok.toml'}",
+                f"--apt-fixture={FIXTURES / 'apt_cache_ok.json'}",
+                f"--ppa-fixture={FIXTURES / 'ppa_index_ok.json'}",
+                "--live-ppa",
+            ]
+        )
+    captured = capsys.readouterr()
+    assert "mutually exclusive" in captured.err
+
+
 def test_unit_homebrew_formula_parser():
     text = (FIXTURES / "formula_ok.rb").read_text()
     snap = cd.parse_homebrew_formula(text)

@@ -19,11 +19,16 @@ Inputs
                         Replaces ``apt-cache madison`` on hosts without
                         a Noble chroot.
 * ``--ppa-fixture PATH``   Same shape, but for the configured PPA.
+* ``--live-ppa``        Query ``apt-cache madison`` for ``ppa`` rows
+                        too. Use on a Noble host that already has the
+                        Avalan PPA configured -- the same apt query
+                        answers both source kinds because the madison
+                        output combines every configured archive.
 
 When ``--apt-fixture`` is not supplied the script invokes
-``apt-cache madison`` directly. When ``--ppa-fixture`` is not supplied,
-only PPA metadata (provenance, source-package or sdist references) is
-audited — the live PPA index check lands once the PPA exists.
+``apt-cache madison`` directly. When neither ``--ppa-fixture`` nor
+``--live-ppa`` is supplied, only PPA metadata (provenance,
+source-package or sdist references) is audited.
 """
 
 from __future__ import annotations
@@ -581,6 +586,18 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--live-ppa",
+        action="store_true",
+        help=(
+            "query apt-cache madison for ppa rows in addition to noble "
+            "rows. Use when running on a Noble host that already has "
+            "the Avalan PPA configured: apt-cache madison returns "
+            "every source's versions combined, so the same query "
+            "answers both source kinds. Mutually exclusive with "
+            "--ppa-fixture."
+        ),
+    )
+    parser.add_argument(
         "--packages-dir",
         default=None,
         help=(
@@ -627,10 +644,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = Report()
     verify_parity(formula, pyproject, depmap, report)
 
+    if args.live_ppa and args.ppa_fixture is not None:
+        parser.error("--live-ppa and --ppa-fixture are mutually exclusive")
+
     apt = _load_fixture(args.apt_fixture)
     if apt is None:
         apt = real_apt_madison_query()
     ppa = _load_fixture(args.ppa_fixture)
+    if args.live_ppa:
+        if apt is None:
+            report.fail(
+                "--live-ppa requires apt-cache on PATH; run on a Noble "
+                "host with the Avalan PPA configured."
+            )
+        else:
+            ppa = apt
 
     needs_noble_query = any(d.source == "noble" for d in depmap.deps)
     if needs_noble_query and apt is None:
