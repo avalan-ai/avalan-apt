@@ -12,16 +12,17 @@
 # against `apt-cache madison` and the configured PPA index.
 
 [meta]
-upstream_version = "1.4.10"
+upstream_version = "1.4.11"
 # Commit in homebrew-avalan that introduced the upstream pin this map
 # matches. CI's parity check re-derives extras + constraints from the
 # formula at this sha and compares against this inventory. The 1.4.9
 # upstream introduced two new opt-in extras (`a2a`, `litellm`) that
-# moved a2a-sdk and litellm out of the default profile, and 1.4.10
-# adds tiktoken back to the base profile. The Homebrew
+# moved a2a-sdk and litellm out of the default profile, 1.4.10
+# added tiktoken back to the base profile, and 1.4.11 only widened
+# upstream's Python support ceiling to include Python 3.14. The Homebrew
 # formula has not yet been bumped, so this still points at the 1.4.7
 # commit. The formula's EXTRAS list (agent/server/tool/vendors) is
-# unchanged between 1.4.7, 1.4.8, 1.4.9, and 1.4.10, so the parity
+# unchanged between 1.4.7 and 1.4.11, so the parity
 # check stays meaningful — the `a2a` / `litellm` extras live in
 # pyproject only and are correctly omitted from the formula's default
 # profile, while base deps are checked directly from pyproject.
