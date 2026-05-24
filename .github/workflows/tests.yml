@@ -21,7 +21,7 @@ jobs:
         # macos-14 (Apple Silicon) covers the dev-host platform; both
         # ubuntu LTS cells stay because Noble is the deployment target.
         os: [ubuntu-24.04, ubuntu-22.04, macos-14]
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
 
