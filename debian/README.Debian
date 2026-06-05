@@ -22,8 +22,10 @@ extras. The following upstream extras are not in the .deb:
   * `audio`         — soundfile + torchaudio
   * `memory`        — vector stores + tree-sitter + pdf tooling
   * `mlx` / `apple` — Apple-silicon MLX runtime
-  * `nvidia` / `vllm` / `quantization`
-                    — CUDA + vLLM + bitsandbytes
+  * `nvidia` / `quantization`
+                    — CUDA + bitsandbytes
+  * `vllm`          — reserved upstream while vLLM depends on vulnerable
+                    diskcache releases without an upstream fix
   * `ds4`           — DualShock 4 input
   * `secrets`       — boto3 + keyring
   * `translation`   — protobuf + sentencepiece
