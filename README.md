@@ -54,7 +54,9 @@ following upstream extras are not in the .deb:
 - `audio` — `soundfile`, `torchaudio`.
 - `memory` — vector stores, `tree-sitter`, PDF tooling.
 - `mlx` / `apple` — Apple Silicon MLX runtime.
-- `nvidia` / `vllm` / `quantization` — CUDA, vLLM, bitsandbytes.
+- `nvidia` / `quantization` — CUDA and bitsandbytes.
+- `vllm` — reserved upstream while vLLM depends on vulnerable `diskcache`
+  releases without an upstream fix.
 - `code` — RestrictedPython sandbox.
 - `youtube` — `youtube-transcript-api`.
 - `a2a` — Google's Agent2Agent SDK.
